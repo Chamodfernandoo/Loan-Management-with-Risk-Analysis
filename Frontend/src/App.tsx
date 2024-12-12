@@ -5,7 +5,7 @@ function App() {
   return (
     <>
       <div>
-        <Button>Click me now</Button>
+        <Button>Click me me</Button>
       </div>
     </>
   )
