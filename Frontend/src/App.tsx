@@ -1,14 +1,31 @@
-import { Button } from "./components/ui/button"
+import React from "react";
+import { Routes, Route, } from "react-router-dom";
+import Lender_dashbord from "./pages/Lender/lender_dashbord";
+import Customer_dashbord from "./pages/Customer/customer_dashbord";
+import Viwe_loans from "./pages/Lender/viwe_loans";
 
-function App() {
-
+const App: React.FC = () => {
   return (
     <>
-      <div>
-        <Button>Click me me</Button>
-      </div>
-    </>
-  )
-}
+     {/* // <Router> */}
+      {/* lender routes */}
+      <Routes>
+        <Route path="/" element={<Lender_dashbord/>} />
+         <Route path="/view_loan" element={<Viwe_loans />} />
+        {/*<Route path="/contact" element={<Contact />} /> */}
+      </Routes>
 
-export default App
+    {/* customer routes */}
+      <Routes>
+         <Route path="/lender" element={<Customer_dashbord />} />
+        {/* <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} /> */}
+        </Routes>
+    {/* </Router> */}
+    </>
+   
+      
+  );
+};
+
+export default App;
