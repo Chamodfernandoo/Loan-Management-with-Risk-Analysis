@@ -1,9 +1,16 @@
-const lender_dashbord = () => {
+import { ButtonCard } from "@/components/default/card"
+
+const Lender_dashbord = () => {
   return (
-    <div>
-      
+    <div className="grid grid-cols-1 gap-6 p-10 md:grid-cols-2 lg:grid-cols-3 ">
+      <ButtonCard icon="" title="Create Loan" href="/create_loan" />
+      <ButtonCard icon="" title="View Loan" href="/view_loan" />
+      <ButtonCard icon="" title="View Profile" href="/view_profile" />
+      <ButtonCard icon="" title="Create Loan" href="/create_loan" />
+      <ButtonCard icon="" title="View Loan" href="/view_loan" />
+      <ButtonCard icon="" title="View Profile" href="/view_profile" />
     </div>
   )
 }
 
-export default lender_dashbord
+export default Lender_dashbord
