@@ -16,6 +16,12 @@ const provinces = [
   { label: "Western Province", value: "western" },
   { label: "Central Province", value: "central" },
   { label: "Southern Province", value: "southern" },
+  { label: "Northern Province", value: "northern" },
+  { label: "Eastern Province", value: "eastern" },
+  { label: "North Western Province", value: "north-western" },
+  { label: "North Central Province", value: "north-central" },
+  { label: "Uva Province", value: "uva" },
+  { label: "Sabaragamuwa Province", value: "sabaragamuwa" },
 ]
 
 const districts = {
@@ -34,6 +40,34 @@ const districts = {
     { label: "Matara", value: "matara" },
     { label: "Hambantota", value: "hambantota" },
   ],
+  northern: [
+    { label: "Jaffna", value: "jaffna" },
+    { label: "Kilinochchi", value: "kilinochchi" },
+    { label: "Mannar", value: "mannar" },
+    { label: "Mullaitivu", value: "mullaitivu" },
+    { label: "Vavuniya", value: "vavuniya" },
+  ],
+  eastern: [
+    { label: "Trincomalee", value: "trincomalee" },
+    { label: "Batticaloa", value: "batticaloa" },
+    { label: "Ampara", value: "ampara" },
+  ],  
+  "north-western": [
+    { label: "Kurunegala", value: "kurunegala" },
+    { label: "Puttalam", value: "puttalam" },
+  ],
+  "north-central": [
+    { label: "Anuradhapura", value: "anuradhapura" },
+    { label: "Polonnaruwa", value: "polonnaruwa" },
+  ],
+  uva: [
+    { label: "Badulla", value: "badulla" },
+    { label: "Monaragala", value: "monaragala" },
+  ],
+  sabaragamuwa: [
+    { label: "Ratnapura", value: "ratnapura" },
+    { label: "Kegalle", value: "kegalle" },
+  ],  
 }
 
 const formSchema = z.object({
