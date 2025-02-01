@@ -116,7 +116,7 @@ const Addressinfo = () => {
               name="province"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Select provinces</FormLabel>
+                  <FormLabel>Select province</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
