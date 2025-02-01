@@ -9,6 +9,7 @@ import Personalinfo from "./pages/registration/account/personalinfo";
 import Addressinfo from "./pages/registration/account/addressinfo";
 import Doctype from "./pages/registration/documents/doctype";
 import Uploadtype from "./pages/registration/documents/uploadtype";
+import Termsconditions from "./pages/Terms&conditions";
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,7 @@ const App: React.FC = () => {
         <Route path="/register4" element={<Addressinfo />} />
         <Route path="/register5" element={<Doctype />} />
         <Route path="/register6" element={<Uploadtype />} />
+        <Route path="/terms" element={<Termsconditions />} />
       </Routes>
 
       {/* lender routes */}

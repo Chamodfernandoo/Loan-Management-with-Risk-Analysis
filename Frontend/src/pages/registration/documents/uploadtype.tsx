@@ -159,20 +159,21 @@ const Uploadtype = () => {
                       </div>
                       {frontPreview && (
                         <div className="relative">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className=" top-2 right-2"
+                            onClick={() => clearPreview("front")}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                           <img
                             src={frontPreview || "/placeholder.svg"}
                             alt="Front side preview"
                             className="w-3/4 rounded-lg border"
                           />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 right-2"
-                            onClick={() => clearPreview("front")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          
                         </div>
                       )}
                     </div>
@@ -208,20 +209,21 @@ const Uploadtype = () => {
                       </div>
                       {backPreview && (
                         <div className="relative">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="top-2 right-2"
+                            onClick={() => clearPreview("back")}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                           <img
                             src={backPreview || "/placeholder.svg"}
                             alt="Back side preview"
                             className="max-w-sm rounded-lg border"
                           />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 right-2"
-                            onClick={() => clearPreview("back")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          
                         </div>
                       )}
                     </div>
