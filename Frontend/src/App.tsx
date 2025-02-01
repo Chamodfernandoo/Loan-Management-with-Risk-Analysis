@@ -8,6 +8,7 @@ import { InputOTPForm } from "./pages/registration/phonenumber/otp";
 import Personalinfo from "./pages/registration/account/personalinfo";
 import Addressinfo from "./pages/registration/account/addressinfo";
 import Doctype from "./pages/registration/documents/doctype";
+import Uploadtype from "./pages/registration/documents/uploadtype";
 
 const App: React.FC = () => {
   return (
@@ -20,9 +21,7 @@ const App: React.FC = () => {
         <Route path="/register3" element={<Personalinfo />} />
         <Route path="/register4" element={<Addressinfo />} />
         <Route path="/register5" element={<Doctype />} />
-        <Route path="/register6" element={<Phoneno />} />
-        <Route path="/register7" element={<Phoneno />} />
-        <Route path="/register8" element={<Phoneno />} />
+        <Route path="/register6" element={<Uploadtype />} />
       </Routes>
 
       {/* lender routes */}
