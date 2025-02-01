@@ -1,9 +1,9 @@
 import React from 'react'
 
-const doctype = () => {
+const Doctype = () => {
   return (
-    <div>doctype</div>
+    <div>D</div>
   )
 }
 
-export default doctype
+export default Doctype
