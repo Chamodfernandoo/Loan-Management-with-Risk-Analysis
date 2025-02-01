@@ -6,6 +6,7 @@ import Viwe_loans from "./pages/Lender/viwe_loans";
 import Phoneno from "./pages/registration/phonenumber/phoneno";
 import { InputOTPForm } from "./pages/registration/phonenumber/otp";
 import Personalinfo from "./pages/registration/account/personalinfo";
+import Addressinfo from "./pages/registration/account/addressinfo";
 
 const App: React.FC = () => {
   return (
@@ -16,7 +17,7 @@ const App: React.FC = () => {
         <Route path="/register1" element={<Phoneno />} />
         <Route path="/register2" element={<InputOTPForm />} />
         <Route path="/register3" element={<Personalinfo />} />
-        <Route path="/register4" element={<Phoneno />} />
+        <Route path="/register4" element={<Addressinfo />} />
         <Route path="/register5" element={<Phoneno />} />
         <Route path="/register6" element={<Phoneno />} />
         <Route path="/register7" element={<Phoneno />} />
