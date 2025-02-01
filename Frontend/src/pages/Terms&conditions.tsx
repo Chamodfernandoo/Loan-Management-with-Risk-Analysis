@@ -71,7 +71,7 @@ const Termsconditions = () => {
     ];
   
     return (
-      <div className="h-screen bg-gray-50 p-4 md:p-8 border-2 border-red-800">
+      <div className="h-screen bg-gray-50 p-4 md:p-8">
         <Card className="max-w-4xl mx-auto h-full">
           <CardHeader>
             <h1 className="text-2xl font-bold text-gray-900">Terms and Conditions</h1>
