@@ -10,6 +10,7 @@ import Addressinfo from "./pages/registration/account/addressinfo";
 import Doctype from "./pages/registration/documents/doctype";
 import Uploadtype from "./pages/registration/documents/uploadtype";
 import Termsconditions from "./pages/Terms&conditions";
+import Create_loan from "./pages/Lender/create_loan";
 
 const App: React.FC = () => {
   return (
@@ -30,6 +31,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<Viwe_loans />} />
+         <Route path="/create_loan" element={<Create_loan />} />
         {/*<Route path="/contact" element={<Contact />} /> */}
       </Routes>
 
