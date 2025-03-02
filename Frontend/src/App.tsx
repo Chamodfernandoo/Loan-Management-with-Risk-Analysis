@@ -14,7 +14,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<Viwe_loans />} />
           <Route path="/agreement" element={<Agreement />} />
-        {/*<Route path="/contact" element={<Contact />} /> */}
+          {/* <Route path="/contact" element={<Contact />} /> */}
       </Routes>
 
     {/* customer routes */}
