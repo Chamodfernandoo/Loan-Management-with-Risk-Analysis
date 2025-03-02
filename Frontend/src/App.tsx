@@ -4,6 +4,7 @@ import Lender_dashbord from "./pages/Lender/lender_dashbord";
 import Customer_dashbord from "./pages/Customer/customer_dashbord";
 import Viwe_loans from "./pages/Lender/viwe_loans";
 import Agreement from "./pages/Agreement";
+import Payament_popup from "./pages/Lender/invoice/payament_popup";
 
 const App: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<Viwe_loans />} />
           <Route path="/agreement" element={<Agreement />} />
+          <Route path="/payment" element={<Payament_popup />} />{/*this one temporally genarate, it you build invoices table page ,delete this route />
         {/*<Route path="/contact" element={<Contact />} /> */}
       </Routes>
 
