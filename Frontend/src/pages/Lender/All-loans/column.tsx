@@ -133,7 +133,7 @@ export const columns: ColumnDef<Loan>[] = [
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/invoices/${loan.id}`}>
+            <Link to={`/invoice`}>
               <FileText className="mr-2 h-4 w-4" />
               View Invoice
             </Link>
