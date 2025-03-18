@@ -3,6 +3,9 @@ import { Routes, Route, } from "react-router-dom";
 import Lender_dashbord from "./pages/Lender/lender_dashbord";
 import Customer_dashbord from "./pages/Customer/customer_dashbord";
 import Viwe_loans from "./pages/Lender/viwe_loans";
+
+import Agreement from "./pages/Agreement";
+
 import Phoneno from "./pages/registration/phonenumber/phoneno";
 import { InputOTPForm } from "./pages/registration/phonenumber/otp";
 import Personalinfo from "./pages/registration/account/personalinfo";
@@ -11,6 +14,7 @@ import Doctype from "./pages/registration/documents/doctype";
 import Uploadtype from "./pages/registration/documents/uploadtype";
 import Termsconditions from "./pages/Terms&conditions";
 import Create_loan from "./pages/Lender/create_loan";
+
 
 const App: React.FC = () => {
   return (
@@ -31,8 +35,13 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<Viwe_loans />} />
+
+          <Route path="/agreement" element={<Agreement />} />
+          {/* <Route path="/contact" element={<Contact />} /> */}
+
          <Route path="/create_loan" element={<Create_loan />} />
         {/*<Route path="/contact" element={<Contact />} /> */}
+
       </Routes>
 
     {/* customer routes */}
