@@ -5,6 +5,7 @@ import Customer_dashbord from "./pages/Customer/customer_dashbord";
 import Viwe_loans from "./pages/Lender/viwe_loans";
 
 import Agreement from "./pages/Agreement";
+import Payament_popup from "./pages/Lender/invoice/payament_popup";
 
 import Phoneno from "./pages/registration/phonenumber/phoneno";
 import { InputOTPForm } from "./pages/registration/phonenumber/otp";
@@ -37,9 +38,13 @@ const App: React.FC = () => {
          <Route path="/view_loan" element={<Viwe_loans />} />
 
           <Route path="/agreement" element={<Agreement />} />
+
+          <Route path="/payment" element={<Payament_popup />} />{/*this one temporally genarate, it you build invoices table page ,delete this route />
+
           {/* <Route path="/contact" element={<Contact />} /> */}
 
          <Route path="/create_loan" element={<Create_loan />} />
+
         {/*<Route path="/contact" element={<Contact />} /> */}
 
       </Routes>
