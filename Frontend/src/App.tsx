@@ -15,6 +15,7 @@ import Uploadtype from "./pages/registration/documents/uploadtype";
 import Termsconditions from "./pages/Terms&conditions";
 import Create_loan from "./pages/Lender/create_loan";
 import LoanHistoryPage from "./pages/Lender/All-loans/page";
+import CustomerLoanHistoryPage from "./pages/Lender/Customer-loans/page";
 
 
 const App: React.FC = () => {
@@ -37,8 +38,8 @@ const App: React.FC = () => {
         <Route path="/" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<LoanHistoryPage />} />
           <Route path="/agreement" element={<Agreement />} />
-          <Route path="/payment" element={<Payament_popup />} />{/*this one temporally genarate, it you build invoices table page ,delete this route />
-          {/* <Route path="/contact" element={<Contact />} /> */}
+          <Route path="/payment" element={<Payament_popup />} />{/*this one temporally genarate, it you build invoices table page ,delete this route />*/}
+          <Route path="/customer-history" element={<CustomerLoanHistoryPage/>} />
          <Route path="/create_loan" element={<Create_loan />} />
         {/*<Route path="/contact" element={<Contact />} /> */}
 
