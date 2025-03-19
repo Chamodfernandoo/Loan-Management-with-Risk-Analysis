@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { format } from "date-fns"
 import Payament_popup from "./payament_popup"
+import { ArrowLeft } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 // Sample invoice data
 const invoiceData = {
@@ -106,6 +108,7 @@ const paymentHistoryData: Payment[] = [
 export default function InvoiceView() {
   const [payments, setPayments] = useState<Payment[]>(paymentHistoryData)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const navigate = useNavigate()
 
   // Handle adding a new payment
   const handleAddPayment = (amount: string, date: Date, method: string) => {
@@ -130,6 +133,10 @@ export default function InvoiceView() {
     <div className="container mx-auto py-6 space-y-6 max-w-4xl">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
           <CardTitle className="text-2xl font-bold">View Invoice</CardTitle>
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />

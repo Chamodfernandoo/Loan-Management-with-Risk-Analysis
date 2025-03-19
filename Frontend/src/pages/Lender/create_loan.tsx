@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-
+import { ArrowLeft } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 // Define the form schema with Zod
 const formSchema = z.object({
   searchId: z.string().optional(),
@@ -33,6 +34,7 @@ const Create_loan = () => {
 
   const [isSearching, setIsSearching] = useState(false)
   const today = format(new Date(), "MMMM dd, yyyy")
+  const navigate = useNavigate()
 
   // Initialize the form
   const form = useForm<FormValues>({
@@ -101,6 +103,10 @@ const Create_loan = () => {
   return (
     <>
         <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       <Card className="shadow-lg">
         <CardHeader className="bg-primary text-primary-foreground">
           <CardTitle className="text-2xl font-bold">Add Order</CardTitle>

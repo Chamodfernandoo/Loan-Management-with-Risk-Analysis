@@ -6,6 +6,8 @@ import { AdCard } from "@/components/default/ad-card"
 import { AdFilter } from "@/components/default/ad-filter"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 // Sample data - in a real app, this would come from your API
 const sampleAds: LenderAd[] = [
@@ -111,6 +113,7 @@ const AllAdsPage: React.FC = () => {
   const [filteredAds, setFilteredAds] = useState<LenderAd[]>(sampleAds)
   const [filter, setFilter] = useState<Partial<Location>>({})
   const [viewMode, setViewMode] = useState<"all" | "my">("all")
+  const navigate = useNavigate()
 
   // Apply filters when filter state or view mode changes
   useEffect(() => {
@@ -136,6 +139,10 @@ const AllAdsPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <Button variant="outline" onClick={() => navigate(-1)}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
         <h1 className="text-2xl sm:text-3xl font-bold">{viewMode === "all" ? "All Lender Ads" : "My Ads"}</h1>
         <Button asChild className="w-full sm:w-auto hidden sm:flex">   
           <Link to="/lender/ads/create">
