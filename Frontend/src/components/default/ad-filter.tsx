@@ -1,51 +1,41 @@
 import { useState, useEffect } from "react"
-import { countries, districts, cities, type Location } from "@/types/ad"
+import { districts, cities, type Location } from "@/types/ad"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Search, X } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface AdFilterProps {
   onFilterChange: (location: Partial<Location>) => void
+  onViewChange: (view: "all" | "my") => void
+  currentView: "all" | "my"
 }
 
-export function AdFilter({ onFilterChange }: AdFilterProps) {
-  const [country, setCountry] = useState<string>("")
+export function AdFilter({ onFilterChange, onViewChange, currentView }: AdFilterProps) {
   const [district, setDistrict] = useState<string>("")
   const [city, setCity] = useState<string>("")
-  const [availableDistricts, setAvailableDistricts] = useState<string[]>([])
   const [availableCities, setAvailableCities] = useState<string[]>([])
 
+  // Update available cities when district changes
   useEffect(() => {
-    if (country) {
-      setAvailableDistricts(districts[country] || [])
-      setDistrict("")
-      setCity("")
-    } else {
-      setAvailableDistricts([])
-    }
-  }, [country])
-
-  useEffect(() => {
-    if (country && district) {
-      setAvailableCities(cities[country]?.[district] || [])
+    if (district) {
+      setAvailableCities(cities[district] || [])
       setCity("")
     } else {
       setAvailableCities([])
     }
-  }, [country, district])
+  }, [district])
 
   const handleApplyFilter = () => {
     onFilterChange({
-      country,
       district,
       city,
     })
   }
 
   const handleClearFilter = () => {
-    setCountry("")
     setDistrict("")
     setCity("")
     onFilterChange({})
@@ -54,30 +44,25 @@ export function AdFilter({ onFilterChange }: AdFilterProps) {
   return (
     <Card>
       <CardContent className="p-4 space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="country">Country</Label>
-          <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger id="country">
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {countries.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Tabs
+          defaultValue={currentView}
+          onValueChange={(value) => onViewChange(value as "all" | "my")}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="all">All Ads</TabsTrigger>
+            <TabsTrigger value="my">My Ads</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="space-y-2">
           <Label htmlFor="district">District</Label>
-          <Select value={district} onValueChange={setDistrict} disabled={!country}>
+          <Select value={district} onValueChange={setDistrict}>
             <SelectTrigger id="district">
               <SelectValue placeholder="Select district" />
             </SelectTrigger>
             <SelectContent>
-              {availableDistricts.map((d) => (
+              {districts.map((d) => (
                 <SelectItem key={d} value={d}>
                   {d}
                 </SelectItem>
