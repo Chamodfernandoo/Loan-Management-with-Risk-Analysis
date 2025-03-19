@@ -5,6 +5,8 @@ import { BorrowerAdCard } from "@/components/default/b-ad-card"
 import { BorrowerAdFilter } from "@/components/default/b-ad-filter"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useNavigate } from "react-router-dom"
+import { ArrowLeft } from "lucide-react"
 
 // Sample data with interest rates and loan types
 const sampleAds: LenderAd[] = [
@@ -25,6 +27,78 @@ const sampleAds: LenderAd[] = [
     lenderId: "lender-1",
     interestRate: 12.5,
     loanTypes: ["Personal", "Business"],
+  },
+  {
+    id: "11",
+    createdAt: new Date("2023-01-15"),
+    updatedAt: new Date("2023-01-15"),
+    location: {
+      district: "Colombo",
+      city: "Colombo 3",
+    },
+    shopName: "Cap Loans",
+    lenderName: "John Perera",
+    contactNumber: "077-1234567",
+    description:
+      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
+    photos: ["/placeholder.svg?height=400&width=600"],
+    lenderId: "lender-1",
+    interestRate: 12.5,
+    loanTypes: ["Personal", "Business"],
+  },
+  {
+    id: "18",
+    createdAt: new Date("2023-01-15"),
+    updatedAt: new Date("2023-01-15"),
+    location: {
+      district: "Colombo",
+      city: "Colombo 3",
+    },
+    shopName: "tal Loans",
+    lenderName: "John Perera",
+    contactNumber: "077-1234567",
+    description:
+      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
+    photos: ["/placeholder.svg?height=400&width=600"],
+    lenderId: "lender-1",
+    interestRate: 12.5,
+    loanTypes: ["Personal", "Business"],
+  },
+  {
+    id: "19",
+    createdAt: new Date("2023-01-15"),
+    updatedAt: new Date("2023-01-15"),
+    location: {
+      district: "Colombo",
+      city: "Colombo 3",
+    },
+    shopName: "val Loans",
+    lenderName: "John Perera",
+    contactNumber: "077-1234567",
+    description:
+      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
+    photos: ["/placeholder.svg?height=400&width=600"],
+    lenderId: "lender-1",
+    interestRate: 12.5,
+    loanTypes: ["Personal", "Business"],
+  },
+  {
+    id: "8",
+    createdAt: new Date("2023-01-25"),
+    updatedAt: new Date("2023-01-25"),
+    location: {
+      district: "Colombo",
+      city: "Colombo 3",
+    },
+    shopName: "Dil Loans",
+    lenderName: "John Perera",
+    contactNumber: "077-1234567",
+    description:
+      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
+    photos: ["/placeholder.svg?height=400&width=600"],
+    lenderId: "lender-1",
+    interestRate: 10.5,
+    loanTypes: [ "Business"],
   },
   {
     id: "2",
@@ -121,6 +195,7 @@ const sampleAds: LenderAd[] = [
 const BorrowerAllAdsPage: React.FC = () => {
   const [filteredAds, setFilteredAds] = useState<LenderAd[]>(sampleAds)
   const [sortOption, setSortOption] = useState<string>("interest-asc")
+  const navigate = useNavigate()
 
   // Apply filters
   const handleFilterChange = (filters: {
@@ -179,6 +254,10 @@ const BorrowerAllAdsPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
         <h1 className="text-2xl sm:text-3xl font-bold">Find Lenders</h1>
 
         <div className="w-full sm:w-auto">

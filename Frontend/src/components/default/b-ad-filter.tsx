@@ -27,8 +27,6 @@ export function BorrowerAdFilter({ onFilterChange }: BorrowerAdFilterProps) {
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [maxInterestRate, setMaxInterestRate] = useState<number>(30)
   const [selectedLoanTypes, setSelectedLoanTypes] = useState<string[]>([])
-  const [minAmount, setMinAmount] = useState<string>("")
-  const [maxAmount, setMaxAmount] = useState<string>("")
   const [isOpen, setIsOpen] = useState(false)
 
   // Update available cities when district changes
@@ -57,8 +55,6 @@ export function BorrowerAdFilter({ onFilterChange }: BorrowerAdFilterProps) {
       },
       interestRate: maxInterestRate,
       loanTypes: selectedLoanTypes.length > 0 ? selectedLoanTypes : undefined,
-      minAmount: minAmount ? Number(minAmount) : undefined,
-      maxAmount: maxAmount ? Number(maxAmount) : undefined,
     })
 
     if (window.innerWidth < 1024) {
@@ -71,8 +67,6 @@ export function BorrowerAdFilter({ onFilterChange }: BorrowerAdFilterProps) {
     setCity("")
     setMaxInterestRate(30)
     setSelectedLoanTypes([])
-    setMinAmount("")
-    setMaxAmount("")
 
     onFilterChange({})
 
@@ -134,13 +128,13 @@ export function BorrowerAdFilter({ onFilterChange }: BorrowerAdFilterProps) {
                 </div>
                 <Slider
                   value={[maxInterestRate]}
-                  min={5}
+                  min={0}
                   max={30}
                   step={0.5}
                   onValueChange={(value) => setMaxInterestRate(value[0])}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>5%</span>
+                  <span>0%</span>
                   <span>30%</span>
                 </div>
               </div>
@@ -164,34 +158,6 @@ export function BorrowerAdFilter({ onFilterChange }: BorrowerAdFilterProps) {
                   </Label>
                 </div>
               ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="loan-amount">
-          <AccordionTrigger className="text-base font-medium">Loan Amount</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label htmlFor="min-amount">Minimum Amount (Rs)</Label>
-                <Input
-                  id="min-amount"
-                  type="number"
-                  placeholder="Min amount"
-                  value={minAmount}
-                  onChange={(e) => setMinAmount(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="max-amount">Maximum Amount (Rs)</Label>
-                <Input
-                  id="max-amount"
-                  type="number"
-                  placeholder="Max amount"
-                  value={maxAmount}
-                  onChange={(e) => setMaxAmount(e.target.value)}
-                />
-              </div>
             </div>
           </AccordionContent>
         </AccordionItem>
