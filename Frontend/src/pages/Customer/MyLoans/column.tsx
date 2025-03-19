@@ -10,7 +10,7 @@ import { format } from "date-fns"
 export type Loan = {
   id: string
   orderId: string
-  customerName: string
+  shopName: string
   createdAt: Date
   totalPrice: number
   orderState: "paid" | "pending" | "partial_paid"
@@ -31,16 +31,16 @@ export const columns: ColumnDef<Loan>[] = [
     cell: ({ row }) => <div className="font-medium">{row.getValue("orderId")}</div>,
   },
   {
-    accessorKey: "customerName",
+    accessorKey: "shopName",
     header: ({ column }) => {
       return (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Customer Name
+          Shop Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("customerName")}</div>,
+    cell: ({ row }) => <div>{row.getValue("shopName")}</div>,
   },
   {
     accessorKey: "createdAt",
@@ -55,7 +55,7 @@ export const columns: ColumnDef<Loan>[] = [
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as Date
       return <div>{format(date, "MMM dd, yyyy")}</div>
-    }
+    },
   },
   {
     accessorKey: "totalPrice",
@@ -74,14 +74,14 @@ export const columns: ColumnDef<Loan>[] = [
         currency: "USD",
       }).format(amount)
       return <div className="font-medium">{formatted}</div>
-    }
+    },
   },
-    {
+  {
     accessorKey: "orderState",
     header: "Order State",
     cell: ({ row }) => {
       const status = row.getValue("orderState") as string
-    
+
       return (
         <Badge
           variant={status === "paid" ? "default" : status === "partial_paid" ? "outline" : "secondary"}
@@ -96,34 +96,34 @@ export const columns: ColumnDef<Loan>[] = [
           {status === "paid" ? "Paid" : status === "partial_paid" ? "Partial Paid" : "Pending"}
         </Badge>
       )
-      },
     },
-      {
-      accessorKey: "installmentState",
-      header: "Installment State",
-      cell: ({ row }) => {
-        const status = row.getValue("installmentState") as string
+  },
+  {
+    accessorKey: "installmentState",
+    header: "Installment State",
+    cell: ({ row }) => {
+      const status = row.getValue("installmentState") as string
 
-        return (
-        <Badge
-          variant={status === "ok" ? "default" : status === "pending" ? "outline" : "destructive"}
-          className={
-          status === "ok"
-            ? "bg-green-100 text-green-800 hover:bg-green-100"
-            : status === "pending"
-            ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-            : "bg-red-100 text-red-800 hover:bg-red-100"
-          }
-        >
-          {status === "ok" ? "OK" : status === "pending" ? "Pending" : "Overdue"}
-        </Badge>
-        )
-      },
-      },
-      {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
+      return (
+      <Badge
+        variant={status === "ok" ? "default" : status === "pending" ? "outline" : "destructive"}
+        className={
+        status === "ok"
+          ? "bg-green-100 text-green-800 hover:bg-green-100"
+          : status === "pending"
+          ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+          : "bg-red-100 text-red-800 hover:bg-red-100"
+        }
+      >
+        {status === "ok" ? "OK" : status === "pending" ? "Pending" : "Overdue"}
+      </Badge>
+      )
+    },
+    },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
       const loan = row.original
 
       return (

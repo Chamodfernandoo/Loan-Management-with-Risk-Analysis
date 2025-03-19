@@ -21,6 +21,7 @@ import AdDetailPage from "./pages/Lender/Advertisments/id/Id";
 import BorrowerAdsLayout from "./pages/Customer/Ads/Layout";
 import BorrowerAllAdsPage from "./pages/Customer/Ads/all-ads";
 import BorrowerAdDetailPage from "./pages/Customer/Ads/Ad-details";
+import MyLoanHistoryPage from "./pages/Customer/MyLoans/page";
 
 
 const App: React.FC = () => {
@@ -60,8 +61,8 @@ const App: React.FC = () => {
     {/* customer routes */}
       <Routes>
          <Route path="/customer" element={<Customer_dashbord />} />
-          {/* <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} /> */}
+          <Route path="/customer/loans" element={<MyLoanHistoryPage />} />
+          {/* <Route path="/contact" element={<Contact />} /> */}
 
           {/* Borrower Ads routes */}
           <Route path="/borrower/ads" element={<BorrowerAdsLayout />}>

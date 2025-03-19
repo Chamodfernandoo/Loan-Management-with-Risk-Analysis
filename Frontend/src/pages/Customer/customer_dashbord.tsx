@@ -9,6 +9,9 @@ const Customer_dashbord = () => {
       <ButtonCard icon="" title="My Profile" href="/customer/profile" />
       <ButtonCard icon="" title="Support" href="/customer/support" />
       <ButtonCard icon="" title="Find Lenders" href="/borrower/ads/all-ads" />
+
+      <ButtonCard icon="" title="Lender dashbord(this is temparaly) " href="/" />
+
     </div>
   )
 }

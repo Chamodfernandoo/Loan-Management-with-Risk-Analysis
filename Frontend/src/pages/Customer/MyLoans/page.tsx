@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { DataTable } from "@/components/default/data-table"
-import { columns, type Loan } from "@/pages/Lender/All-loans/column"
+import { columns, type Loan } from "@/pages/Customer/MyLoans/column"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
@@ -11,24 +11,24 @@ import { useNavigate } from "react-router-dom"
 
 // Sample data
 const data: Loan[] = [
-  {id: "1",orderId: "ORD-001",customerName: "John Doe", createdAt: new Date("2023-01-15"),totalPrice: 5000, orderState: "paid",installmentState: "ok", },
-  {id: "2",orderId: "ORD-002",customerName: "Jane Smith",createdAt: new Date("2023-02-20"),totalPrice: 7500, orderState: "partial_paid",installmentState: "ok",},
-  {id: "3",orderId: "ORD-003",customerName: "Robert Johnson",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue",},
-  {id: "4",orderId: "ORD-004", customerName: "Emily Davis", createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "pending",},
-  {id: "5",orderId: "ORD-005",customerName: "Michael Wilson",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
-  {id: "6",orderId: "ORD-006",customerName: "John Doe",createdAt: new Date("2023-01-15"),totalPrice: 5000,orderState: "paid",installmentState: "ok",},
-  {id: "7",orderId: "ORD-007",customerName: "Jane Smith",createdAt: new Date("2023-02-20"),totalPrice: 7500,orderState: "partial_paid",installmentState: "ok",},
-  {id: "8",orderId: "ORD-008",customerName: "Robert Johnson",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue",},
-  {id: "9",orderId: "ORD-009",customerName: "Emily Davis",createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "overdue",},
-  {id: "10",orderId: "ORD-010",customerName: "Michael Wilson",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
-  {id: "11",orderId: "ORD-011",customerName: "John Doe",createdAt: new Date("2023-01-15"),totalPrice: 5000,orderState: "paid",installmentState: "ok",},
-  {id: "12",orderId: "ORD-012",customerName: "Jane Smith",createdAt: new Date("2023-02-20"),totalPrice: 7500,orderState: "partial_paid",installmentState: "ok",},
-  {id: "13",orderId: "ORD-0013",customerName: "Robert Johnson",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue", },
-  {id: "14",orderId: "ORD-014",customerName: "Emily Davis",createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "pending",},
-  {id: "15",orderId: "ORD-015",customerName: "Michael Wilson",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
+  {id: "1",orderId: "ORD-001",shopName: "cham loans", createdAt: new Date("2023-01-15"),totalPrice: 5000, orderState: "paid",installmentState: "ok", },
+  {id: "2",orderId: "ORD-002",shopName: "cham loans",createdAt: new Date("2023-02-20"),totalPrice: 7500, orderState: "partial_paid",installmentState: "pending",},
+  {id: "3",orderId: "ORD-003",shopName: "Robert loans",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue",},
+  {id: "4",orderId: "ORD-004", shopName: "Emily loans", createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "pending",},
+  {id: "5",orderId: "ORD-005",shopName: "Michael loans",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
+  {id: "6",orderId: "ORD-006",shopName: "John loans",createdAt: new Date("2023-01-15"),totalPrice: 5000,orderState: "paid",installmentState: "ok",},
+  {id: "7",orderId: "ORD-007",shopName: "Jane loans",createdAt: new Date("2023-02-20"),totalPrice: 7500,orderState: "partial_paid",installmentState: "ok",},
+  {id: "8",orderId: "ORD-008",shopName: "Robert loans",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue",},
+  {id: "9",orderId: "ORD-009",shopName: "Emily loans",createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "overdue",},
+  {id: "10",orderId: "ORD-010",shopName: "Michael loans",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
+  {id: "11",orderId: "ORD-011",shopName: "John loans",createdAt: new Date("2023-01-15"),totalPrice: 5000,orderState: "paid",installmentState: "ok",},
+  {id: "12",orderId: "ORD-012",shopName: "Jane loans",createdAt: new Date("2023-02-20"),totalPrice: 7500,orderState: "partial_paid",installmentState: "ok",},
+  {id: "13",orderId: "ORD-0013",shopName: "Robert loans",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "pending", },
+  {id: "14",orderId: "ORD-014",shopName: "Emily Davis",createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "overdue",},
+  {id: "15",orderId: "ORD-015",shopName: "Michael loans",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
 ]
 
-export default function LoanHistoryPage() {
+export default function MyLoanHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const navigate = useNavigate()
@@ -38,7 +38,7 @@ export default function LoanHistoryPage() {
     // Search filter
     const matchesSearch =
       searchQuery === "" ||
-      loan.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.shopName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loan.orderId.toLowerCase().includes(searchQuery.toLowerCase())
 
     // Tab filter
@@ -69,7 +69,7 @@ export default function LoanHistoryPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Enter customer ID"
+                placeholder="Enter shop name or order ID"
                 className="pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
