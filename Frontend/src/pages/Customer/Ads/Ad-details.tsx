@@ -1,12 +1,12 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import type { LenderAd } from "@/types/ad"
+import type { LenderAd } from "@/pages/Lender/Advertisments/types"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { ArrowLeft, MapPin, Phone, Store, User, Percent, Calendar, CreditCard, Info } from "lucide-react"
+import { ArrowLeft, MapPin, Phone, Store, User, Percent, Calendar, Info } from "lucide-react"
 
 // Sample data with interest rates and loan types
 const sampleAds: LenderAd[] = [
@@ -31,8 +31,6 @@ const sampleAds: LenderAd[] = [
     lenderId: "lender-1",
     interestRate: 12.5,
     loanTypes: ["Personal", "Business"],
-    minLoanAmount: 50000,
-    maxLoanAmount: 1000000,
   },
   {
     id: "2",
@@ -51,8 +49,6 @@ const sampleAds: LenderAd[] = [
     lenderId: "lender-2",
     interestRate: 14.0,
     loanTypes: ["Business", "Microfinance", "Agriculture"],
-    minLoanAmount: 25000,
-    maxLoanAmount: 500000,
   },
   {
     id: "4",
@@ -71,8 +67,6 @@ const sampleAds: LenderAd[] = [
     lenderId: "current-lender-id",
     interestRate: 13.75,
     loanTypes: ["Personal", "Business", "Education"],
-    minLoanAmount: 50000,
-    maxLoanAmount: 750000,
   },
 ]
 
@@ -191,15 +185,6 @@ const BorrowerAdDetailPage: React.FC = () => {
                   <div>
                     <p className="font-medium">Interest Rate</p>
                     <p className="text-muted-foreground">{ad.interestRate}% per annum</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CreditCard className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <p className="font-medium">Loan Amount Range</p>
-                    <p className="text-muted-foreground">
-                      Rs {ad.minLoanAmount.toLocaleString()} - Rs {ad.maxLoanAmount.toLocaleString()}
-                    </p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-2">
