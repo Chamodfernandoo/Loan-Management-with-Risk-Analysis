@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { districts, cities, type Location } from "@/types/ad"
+import { districts, cities, type Location } from "@/pages/Lender/Advertisments/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"

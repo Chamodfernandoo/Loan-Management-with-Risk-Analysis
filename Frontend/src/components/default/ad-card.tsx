@@ -1,10 +1,10 @@
-import type { LenderAd } from "@/types/ad"
+import type { LenderAd } from "@/pages/Lender/Advertisments/types"  
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { Phone, MapPin, Store, User } from "lucide-react"
-import Image from "next/image"
+// import Image from "next/image"
 import { Link } from "react-router-dom"
 
 interface AdCardProps {
@@ -17,7 +17,7 @@ export function AdCard({ ad, isOwner = false }: AdCardProps) {
     <Card className="overflow-hidden h-full flex flex-col">
       <div className="relative h-48 bg-gray-100">
         {ad.photos.length > 0 ? (
-          <Image src={ad.photos[0] || "/placeholder.svg"} alt={ad.shopName} fill className="object-cover" />
+          <img src={ad.photos[0] || "/placeholder.svg"} alt={ad.shopName} className="object-cover" />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
             <Store className="h-12 w-12" />
