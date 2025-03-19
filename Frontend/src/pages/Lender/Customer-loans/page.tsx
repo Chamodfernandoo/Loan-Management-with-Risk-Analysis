@@ -7,6 +7,8 @@ import { Search, AlertCircle } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { ArrowLeft } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 // Sample customer data
 const customers = [
@@ -67,6 +69,7 @@ export default function CustomerLoanHistoryPage() {
   const [activeTab, setActiveTab] = useState("all")
   const [searchStatus, setSearchStatus] = useState<"idle" | "not_found" | "no_loans" | "found">("idle")
   const [customerLoans, setCustomerLoans] = useState<CustomerLoan[]>([])
+  const navigate = useNavigate()
 
   const handleSearch = () => {
     // Reset state
@@ -108,6 +111,10 @@ export default function CustomerLoanHistoryPage() {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="w-full md:mx-28  px-4"> 
+      <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       <Card>
         <CardHeader className="pb-3 items-center">
           <CardTitle className="text-2xl font-bold">Customer History</CardTitle>

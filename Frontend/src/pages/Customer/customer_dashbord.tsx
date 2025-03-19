@@ -1,14 +1,15 @@
 import { ButtonCard } from "@/components/default/card"
+
 const Customer_dashbord = () => {
   return (
-    <div className="grid grid-cols-1 gap-6 p-10 md:grid-cols-2 lg:grid-cols-3 ">
-          <ButtonCard icon="" title="Create Loan" href="" />
-          <ButtonCard icon="" title="View Loan" href="/view_loan" />
-          <ButtonCard icon="" title="View Profile" href="/view_profile" />
-          <ButtonCard icon="" title="Create Loan" href="/create_loan" />
-          <ButtonCard icon="" title="View Loan" href="/view_loan" />
-          <ButtonCard icon="" title="View Profile" href="/view_profile" />
-        </div>
+    <div className="grid grid-cols-1 gap-6 p-10 md:grid-cols-2 lg:grid-cols-3">
+      <ButtonCard icon="" title="My Loans" href="/customer/loans" />
+      <ButtonCard icon="" title="Payment History" href="/customer/payments" />
+      <ButtonCard icon="" title="Loan Agreements" href="/customer/agreements" />
+      <ButtonCard icon="" title="My Profile" href="/customer/profile" />
+      <ButtonCard icon="" title="Support" href="/customer/support" />
+      <ButtonCard icon="" title="Find Lenders" href="/borrower/ads/all-ads" />
+    </div>
   )
 }
 

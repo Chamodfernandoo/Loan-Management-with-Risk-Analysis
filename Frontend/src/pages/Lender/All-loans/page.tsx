@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 // Sample data
 const data: Loan[] = [
@@ -29,6 +31,7 @@ const data: Loan[] = [
 export default function LoanHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  const navigate = useNavigate()
 
   // Filter data based on search query and active tab
   const filteredData = data.filter((loan) => {
@@ -52,7 +55,11 @@ export default function LoanHistoryPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row gap-5">
+        <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
           <CardTitle className="text-2xl font-bold">Order History</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
