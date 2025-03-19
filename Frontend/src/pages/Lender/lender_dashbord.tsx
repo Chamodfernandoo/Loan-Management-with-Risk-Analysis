@@ -5,10 +5,10 @@ const Lender_dashbord = () => {
     <div className="grid grid-cols-1 gap-6 p-10 md:grid-cols-2 lg:grid-cols-3 ">
       <ButtonCard icon="" title="Create Loan" href="/create_loan" />
       <ButtonCard icon="" title="View Loan" href="/view_loan" />
-      <ButtonCard icon="" title="View Profile" href="/view_profile" />
-      <ButtonCard icon="" title="Create Loan" href="/create_loan" />
-      <ButtonCard icon="" title="View Loan" href="/view_loan" />
-      <ButtonCard icon="" title="View Profile" href="/view_profile" />
+      <ButtonCard icon="" title="Customer History" href="/customer-history" />
+      <ButtonCard icon="" title="Loan Agreements" href="/create_loan" />
+      <ButtonCard icon="" title="Analyse Profile" href="/view_loan" />
+      <ButtonCard icon="" title="Create Post" href="/view_profile" />
     </div>
   )
 }

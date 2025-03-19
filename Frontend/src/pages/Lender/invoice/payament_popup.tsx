@@ -31,27 +31,33 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 const paymentMethods = [
-{ value: "cash", label: "Cash" },
-  { value: "credit_card", label: "Credit Card" },
-  { value: "debit_card", label: "Debit Card" },
+  { value: "cash", label: "Cash" },
+  { value: "card", label: "Card" },
+  // { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "cheque", label: "Cheque" },
 ]
 
-const Payament_popup = () => {
+interface PaymentPopupProps {
+  onSubmitPayment: (amount: string, date: Date, method: string) => void
+}
 
-    const form = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-          amount: "",
-          date: new Date(),
-        },
-      })
-    
-      function onSubmit(data: FormValues) {
-        console.log("Form submitted:", data)
-      }
+const Payament_popup = ({ onSubmitPayment }: PaymentPopupProps) => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      amount: "",
+      date: new Date(),
+    },
+  })
+
+  function onSubmit(data: FormValues) {
+    console.log("Form submitted:", data)
+    onSubmitPayment(data.amount, data.date, data.method)
+    form.reset()
+  }
 
   return (
-     <div className=" px-4 py-6 max-w-xl">
+    <div className="px-4 py-6 max-w-xl">
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Pay now</CardTitle>
@@ -96,7 +102,7 @@ const Payament_popup = () => {
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date < new Date() || date > new Date("2100-01-01")}
+                          disabled={(date) => date > new Date("2100-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
@@ -143,4 +149,4 @@ const Payament_popup = () => {
   )
 }
 
-export default Payament_popup;
+export default Payament_popup
