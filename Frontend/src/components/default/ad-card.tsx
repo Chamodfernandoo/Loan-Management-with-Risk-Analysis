@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
-import { Phone, MapPin, Store, User } from "lucide-react"
+import { Phone, MapPin, Store, User, Percent, BadgeCent } from "lucide-react"
 
 interface AdCardProps {
   ad: LenderAd
@@ -42,6 +42,16 @@ export function AdCard({ ad, isOwner = false }: AdCardProps) {
             <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
             <span className="text-muted-foreground">Contact:</span>
             <span className="ml-1 font-medium">{ad.contactNumber}</span>
+          </div>
+          <div className="flex items-center text-xs sm:text-sm">
+            <Percent className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
+            <span className="text-muted-foreground">Interest:</span>
+            <span className="ml-1 font-medium">{ad.interestRate}</span>
+          </div>
+          <div className="flex items-center text-xs sm:text-sm">
+            <BadgeCent className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
+            <span className="text-muted-foreground">Loan Type:</span>
+            <span className="ml-1 font-medium">{ad.loanTypes}</span>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-2">{ad.description}</p>
         </div>

@@ -1,14 +1,14 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import type { LenderAd } from "@/pages/Lender/Advertisments/types"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { LenderAd } from "@/types/ad"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { ArrowLeft, BadgeCent, MapPin, Percent, Phone, Store, User } from "lucide-react"
+import { ArrowLeft, MapPin, Phone, Store, User, Percent, Calendar, CreditCard, Info } from "lucide-react"
 
-// Sample data - in a real app, this would come from your API
+// Sample data with interest rates and loan types
 const sampleAds: LenderAd[] = [
   {
     id: "1",
@@ -22,16 +22,17 @@ const sampleAds: LenderAd[] = [
     lenderName: "John Perera",
     contactNumber: "077-1234567",
     description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
+      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options. Our team of financial experts will guide you through the entire process, ensuring you get the best loan terms tailored to your needs. We pride ourselves on transparency and excellent customer service.",
     photos: [
       "/placeholder.svg?height=400&width=600",
       "/placeholder.svg?height=400&width=600&text=Photo+2",
       "/placeholder.svg?height=400&width=600&text=Photo+3",
     ],
     lenderId: "lender-1",
-    interestRate: 8.5,
-    loanTypes: ["Personal", "Business", "Home"],
-
+    interestRate: 12.5,
+    loanTypes: ["Personal", "Business"],
+    minLoanAmount: 50000,
+    maxLoanAmount: 1000000,
   },
   {
     id: "2",
@@ -48,8 +49,10 @@ const sampleAds: LenderAd[] = [
       "Specializing in small business loans and microfinance. Serving the Kandy region for over 10 years with trusted financial services.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "lender-2",
-    interestRate: 9.0,
-    loanTypes: ["Business", "Microfinance"],
+    interestRate: 14.0,
+    loanTypes: ["Business", "Microfinance", "Agriculture"],
+    minLoanAmount: 25000,
+    maxLoanAmount: 500000,
   },
   {
     id: "4",
@@ -66,12 +69,14 @@ const sampleAds: LenderAd[] = [
       "Family-owned lending business offering personal loans, business loans, and installment plans. Trusted by the community for generations.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "current-lender-id",
-    interestRate: 7.5,
-    loanTypes: ["Personal", "Business", "Installment"],
+    interestRate: 13.75,
+    loanTypes: ["Personal", "Business", "Education"],
+    minLoanAmount: 50000,
+    maxLoanAmount: 750000,
   },
 ]
 
-const AdDetailPage: React.FC = () => {
+const BorrowerAdDetailPage: React.FC = () => {
   const params = useParams()
   const navigate = useNavigate()
   const [ad, setAd] = useState<LenderAd | null>(null)
@@ -104,8 +109,10 @@ const AdDetailPage: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-3xl">
         <Card>
           <CardContent className="p-6 sm:p-8 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Ad Not Found</h2>
-            <p className="text-muted-foreground mb-6">The ad you're looking for doesn't exist or has been removed.</p>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Lender Not Found</h2>
+            <p className="text-muted-foreground mb-6">
+              The lender you're looking for doesn't exist or has been removed.
+            </p>
             <Button onClick={() => navigate(-1)}>Go Back</Button>
           </CardContent>
         </Card>
@@ -113,24 +120,27 @@ const AdDetailPage: React.FC = () => {
     )
   }
 
-  const isOwner = ad.lenderId === "current-lender-id"
-
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-4xl">
       <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
+        Back to Lenders
       </Button>
 
-      <Card className="shadow-sm">
+      <Card className="shadow-sm mb-6">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <CardTitle className="text-xl sm:text-2xl font-bold">{ad.shopName}</CardTitle>
-            {isOwner && <Badge className="bg-primary mt-1 sm:mt-0">Your Ad</Badge>}
-          </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 mr-1" />
-            {ad.location.city}, {ad.location.district}
+            <div>
+              <CardTitle className="text-xl sm:text-2xl font-bold">{ad.shopName}</CardTitle>
+              <CardDescription className="flex items-center text-sm mt-1">
+                <MapPin className="h-3.5 w-3.5 mr-1" />
+                {ad.location.city}, {ad.location.district}
+              </CardDescription>
+            </div>
+            <Badge className="bg-green-600 hover:bg-green-700 text-base px-3 py-1 mt-1 sm:mt-0">
+              <Percent className="h-4 w-4 mr-1" />
+              {ad.interestRate}% Interest
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -171,6 +181,50 @@ const AdDetailPage: React.FC = () => {
             )}
           </div>
 
+          {/* Loan Information */}
+          <Card className="bg-gray-50">
+            <CardContent className="p-4 sm:p-6">
+              <h3 className="text-lg font-semibold mb-4">Loan Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="flex items-start space-x-2">
+                  <Percent className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Interest Rate</p>
+                    <p className="text-muted-foreground">{ad.interestRate}% per annum</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <CreditCard className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Loan Amount Range</p>
+                    <p className="text-muted-foreground">
+                      Rs {ad.minLoanAmount.toLocaleString()} - Rs {ad.maxLoanAmount.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <Calendar className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Available Since</p>
+                    <p className="text-muted-foreground">{format(ad.createdAt, "MMMM dd, yyyy")}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Loan Types */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Available Loan Types</h3>
+            <div className="flex flex-wrap gap-2">
+              {ad.loanTypes.map((type) => (
+                <Badge key={type} className="px-3 py-1">
+                  {type}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
           {/* Lender Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -188,16 +242,6 @@ const AdDetailPage: React.FC = () => {
                     <span className="ml-2 font-medium">{ad.contactNumber}</span>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center text-xs sm:text-sm">
-                <Percent className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
-                <span className="text-muted-foreground">Interest:</span>
-                <span className="ml-1 font-medium">{ad.interestRate}</span>
-            </div>
-                <div className="flex items-center text-xs sm:text-sm">
-                  <BadgeCent className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
-                  <span className="text-muted-foreground">Loan Type:</span>
-                  <span className="ml-1 font-medium">{ad.loanTypes}</span>
               </div>
 
               <div>
@@ -222,19 +266,30 @@ const AdDetailPage: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold">Ad Information</h3>
-                <div className="mt-2 space-y-1">
-                  <div className="flex">
-                    <span className="text-muted-foreground w-20">Posted on:</span>
-                    <span>{format(ad.createdAt, "MMMM dd, yyyy")}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-muted-foreground w-20">Ad ID:</span>
-                    <span>{ad.id}</span>
+                <h3 className="text-lg font-semibold">How to Apply</h3>
+                <div className="mt-2 space-y-2">
+                  <p className="text-muted-foreground">
+                    Contact the lender directly using the provided phone number to discuss your loan requirements and
+                    application process.
+                  </p>
+                  <div className="flex items-start space-x-2 mt-4">
+                    <Info className="h-4 w-4 text-amber-500 mt-1" />
+                    <p className="text-sm text-amber-700">
+                      Always verify the lender's credentials and read all terms and conditions before proceeding with
+                      any loan application.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Contact Button */}
+          <div className="flex justify-center pt-4">
+            <Button size="lg" className="w-full sm:w-auto">
+              <Phone className="mr-2 h-4 w-4" />
+              Contact Lender
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -242,4 +297,4 @@ const AdDetailPage: React.FC = () => {
   )
 }
 
-export default AdDetailPage
+export default BorrowerAdDetailPage
