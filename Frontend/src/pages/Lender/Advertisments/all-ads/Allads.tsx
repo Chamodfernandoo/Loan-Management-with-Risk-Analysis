@@ -1,10 +1,11 @@
+import type React from "react"
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import type { LenderAd, Location } from "@/pages/Lender/Advertisments/types"
-import { AdCard } from "@/components/default/ad-card"   
+import { AdCard } from "@/components/default/ad-card"
 import { AdFilter } from "@/components/default/ad-filter"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { Link } from "react-router-dom"
 
 // Sample data - in a real app, this would come from your API
 const sampleAds: LenderAd[] = [
@@ -106,7 +107,7 @@ const sampleAds: LenderAd[] = [
   },
 ]
 
-export default function AllAdsPage() {
+const AllAdsPage: React.FC = () => {
   const [filteredAds, setFilteredAds] = useState<LenderAd[]>(sampleAds)
   const [filter, setFilter] = useState<Partial<Location>>({})
   const [viewMode, setViewMode] = useState<"all" | "my">("all")
@@ -133,10 +134,10 @@ export default function AllAdsPage() {
   }, [filter, viewMode])
 
   return (
-    <div className="container py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{viewMode === "all" ? "All Lender Ads" : "My Ads"}</h1>
-        <Button asChild>
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-7xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">{viewMode === "all" ? "All Lender Ads" : "My Ads"}</h1>
+        <Button asChild className="w-full sm:w-auto hidden sm:flex">   
           <Link to="/lender/ads/create">
             <Plus className="mr-2 h-4 w-4" />
             Create New Ad
@@ -144,14 +145,16 @@ export default function AllAdsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <AdFilter onFilterChange={setFilter} onViewChange={setViewMode} currentView={viewMode} />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="lg:col-span-1 order-1 lg:order-1">
+          <div className="sticky top-20">
+            <AdFilter onFilterChange={setFilter} onViewChange={setViewMode} currentView={viewMode} />
+          </div>
         </div>
 
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-2 lg:order-2">
           {filteredAds.length === 0 ? (
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <div className="bg-gray-50 rounded-lg p-6 sm:p-8 text-center">
               <h3 className="text-lg font-medium mb-2">No ads found</h3>
               <p className="text-muted-foreground mb-4">
                 {viewMode === "my"
@@ -159,17 +162,17 @@ export default function AllAdsPage() {
                   : "There are no ads matching the selected filters."}
               </p>
               {viewMode === "my" ? (
-                <Button asChild>
+                <Button asChild className="w-full sm:w-auto">
                   <Link to="/lender/ads/create">Create Your First Ad</Link>
                 </Button>
               ) : (
-                <Button variant="outline" onClick={() => setFilter({})}>
+                <Button variant="outline" onClick={() => setFilter({})} className="w-full sm:w-auto">
                   Clear Filters
                 </Button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredAds.map((ad) => (
                 <AdCard key={ad.id} ad={ad} isOwner={ad.lenderId === "current-lender-id"} />
               ))}
@@ -180,3 +183,5 @@ export default function AllAdsPage() {
     </div>
   )
 }
+
+export default AllAdsPage

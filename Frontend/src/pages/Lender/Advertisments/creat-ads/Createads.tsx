@@ -1,5 +1,4 @@
 import type React from "react"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -14,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, ArrowRight, Upload, X } from "lucide-react"
-// import Image from "next/image"
 
 // Step 1 schema
 const locationSchema = z.object({
@@ -35,7 +33,7 @@ const formSchema = locationSchema.merge(detailsSchema)
 
 type FormValues = z.infer<typeof formSchema>
 
-export default function CreateAdPage() {
+const CreateAdPage: React.FC = () => {
   const navigate = useNavigate()
   const [step, setStep] = useState<1 | 2>(1)
   const [photos, setPhotos] = useState<string[]>([])
@@ -123,10 +121,10 @@ export default function CreateAdPage() {
   }
 
   return (
-    <div className="container max-w-3xl py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Create New Ad</CardTitle>
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-3xl">
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl sm:text-2xl font-bold">Create New Ad</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -193,7 +191,7 @@ export default function CreateAdPage() {
                   />
 
                   <div className="flex justify-end pt-4">
-                    <Button type="button" onClick={nextStep}>
+                    <Button type="button" onClick={nextStep} className="w-full sm:w-auto">
                       Next Step
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -265,7 +263,7 @@ export default function CreateAdPage() {
                           <img
                             src={photo || "/placeholder.svg"}
                             alt={`Photo ${index + 1}`}
-                            className="object-cover"
+                            className="w-full h-full object-cover"
                           />
                           <Button
                             type="button"
@@ -295,12 +293,14 @@ export default function CreateAdPage() {
                     <FormDescription>Upload up to 4 photos of your business.</FormDescription>
                   </div>
 
-                  <div className="flex justify-between pt-4">
-                    <Button type="button" variant="outline" onClick={prevStep}>
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
+                    <Button type="button" variant="outline" onClick={prevStep} className="order-2 sm:order-1">
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Previous Step
                     </Button>
-                    <Button type="submit">Create Ad</Button>
+                    <Button type="submit" className="order-1 sm:order-2">
+                      Create Ad
+                    </Button>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -311,3 +311,5 @@ export default function CreateAdPage() {
     </div>
   )
 }
+
+export default CreateAdPage

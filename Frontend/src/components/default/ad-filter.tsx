@@ -42,7 +42,7 @@ export function AdFilter({ onFilterChange, onViewChange, currentView }: AdFilter
   }
 
   return (
-    <Card>
+    <Card className="shadow-sm lg:h-screen">
       <CardContent className="p-4 space-y-4">
         <Tabs
           defaultValue={currentView}
@@ -58,7 +58,7 @@ export function AdFilter({ onFilterChange, onViewChange, currentView }: AdFilter
         <div className="space-y-2">
           <Label htmlFor="district">District</Label>
           <Select value={district} onValueChange={setDistrict}>
-            <SelectTrigger id="district">
+            <SelectTrigger id="district" className="w-full">
               <SelectValue placeholder="Select district" />
             </SelectTrigger>
             <SelectContent>
@@ -74,7 +74,7 @@ export function AdFilter({ onFilterChange, onViewChange, currentView }: AdFilter
         <div className="space-y-2">
           <Label htmlFor="city">City</Label>
           <Select value={city} onValueChange={setCity} disabled={!district}>
-            <SelectTrigger id="city">
+            <SelectTrigger id="city" className="w-full">
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
@@ -87,12 +87,12 @@ export function AdFilter({ onFilterChange, onViewChange, currentView }: AdFilter
           </Select>
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <Button onClick={handleApplyFilter} className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <Button onClick={handleApplyFilter} className="w-full">
             <Search className="h-4 w-4 mr-2" />
             Apply Filter
           </Button>
-          <Button variant="outline" onClick={handleClearFilter} className="flex-1">
+          <Button variant="outline" onClick={handleClearFilter} className="w-full">
             <X className="h-4 w-4 mr-2" />
             Clear
           </Button>
