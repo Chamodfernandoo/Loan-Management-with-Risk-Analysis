@@ -26,6 +26,8 @@ const sampleAds: LenderAd[] = [
       "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "lender-1",
+    interestRate: 8.5,
+    loanTypes: ["Personal", "Business", "Home"],
   },
   {
     id: "2",
@@ -42,6 +44,8 @@ const sampleAds: LenderAd[] = [
       "Specializing in small business loans and microfinance. Serving the Kandy region for over 10 years with trusted financial services.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "lender-2",
+    interestRate: 9.0,
+    loanTypes: ["Business", "Microfinance"],
   },
   {
     id: "3",
@@ -58,6 +62,8 @@ const sampleAds: LenderAd[] = [
       "Fast cash loans for emergencies. Low interest rates and same-day approval available for qualified applicants.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "lender-3",
+    interestRate: 7.5,
+    loanTypes: ["Personal", "Emergency"],
   },
   {
     id: "4",
@@ -74,6 +80,8 @@ const sampleAds: LenderAd[] = [
       "Family-owned lending business offering personal loans, business loans, and installment plans. Trusted by the community for generations.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "current-lender-id",
+    interestRate: 8.0,
+    loanTypes: ["Personal", "Business", "Installment"],
   },
   {
     id: "5",
@@ -90,6 +98,8 @@ const sampleAds: LenderAd[] = [
       "Providing financial solutions for individuals and small businesses. Competitive rates and personalized service.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "lender-5",
+    interestRate: 8.75,
+    loanTypes: ["Personal", "Business"],
   },
   {
     id: "6",
@@ -106,6 +116,8 @@ const sampleAds: LenderAd[] = [
       "Serving the southern province with reliable lending services. We specialize in small business loans and personal financing.",
     photos: ["/placeholder.svg?height=400&width=600"],
     lenderId: "current-lender-id",
+    interestRate: 6.5,
+    loanTypes: ["Personal", "Business"],
   },
 ]
 

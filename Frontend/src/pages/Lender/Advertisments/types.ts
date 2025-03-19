@@ -14,6 +14,8 @@ export type Location = {
     description: string
     photos: string[]
     lenderId: string // To identify which lender created the ad
+    interestRate: number // Added interest rate field
+    loanTypes: string[] // Added loan types (e.g., "Personal", "Business", "Home")
   }
   
   // Sri Lankan districts
@@ -95,3 +97,15 @@ export type Location = {
     Trincomalee: ["Trincomalee", "Kinniya", "Muttur", "Kantale", "Thampalakamam"],
     Vavuniya: ["Vavuniya", "Cheddikulam", "Nedunkeni", "Omanthai", "Vavuniya South"],
   }
+
+  // Loan types
+export const loanTypes = [
+  "Personal",
+  "Business",
+  "Home",
+  "Vehicle",
+  "Education",
+  "Agriculture",
+  "Microfinance",
+  "Emergency",
+]
