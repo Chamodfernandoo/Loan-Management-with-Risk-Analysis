@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import { Eye, EyeOff, LogOut, MapPin, Phone, User, Mail, Edit, Save, X, Shield, CreditCard } from "lucide-react"
+import { Eye, EyeOff, LogOut, MapPin, Phone, User, Mail, Edit, Save, X, Shield} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
