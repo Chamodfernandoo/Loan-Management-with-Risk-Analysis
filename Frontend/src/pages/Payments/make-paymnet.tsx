@@ -105,6 +105,11 @@ export default function MakePaymentPage() {
     },
   })
 
+    // Handle print function
+    const handlePrint = () => {
+        window.print()
+      }
+
   // Handle card selection
   const handleCardSelection = (cardId: string) => {
     const card = cards.find((c) => c.id === cardId)
@@ -233,7 +238,7 @@ export default function MakePaymentPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between pt-2">
-            <Button variant="outline" onClick={() => navigate("")}>
+            <Button variant="outline" onClick={handlePrint} >
               Downlord Pdf
             </Button>
             <Button onClick={() => navigate("/invoice1")}>Payment history</Button>
@@ -488,7 +493,7 @@ export default function MakePaymentPage() {
                       Back
                     </Button>
                   ) : (
-                    <Button type="button" variant="outline" onClick={() => navigate("/payments/cards")}>
+                    <Button type="button" variant="outline" onClick={() => navigate("/invoice1")}>
                       Cancel
                     </Button>
                   )}
