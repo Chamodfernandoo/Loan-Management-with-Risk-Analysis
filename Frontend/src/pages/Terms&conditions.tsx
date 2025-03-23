@@ -13,7 +13,7 @@ const Termsconditions = () => {
       {
         title: "1. Introduction",
         content: [
-          "Welcome to [Your Loan Management App Name] ( By using our platform, you agree to comply with these Terms and Conditions. Please read them carefully before proceeding."
+          "Welcome to PAYME ( By using our platform, you agree to comply with these Terms and Conditions. Please read them carefully before proceeding."
         ]
       },
       {
