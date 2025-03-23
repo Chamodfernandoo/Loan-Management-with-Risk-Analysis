@@ -131,11 +131,11 @@ export const columns: ColumnDef<Loan>[] = [
           <Button variant="outline" size="sm" asChild>
             <Link to={`/customers/${loan.id}`}>
               <Eye className="mr-2 h-4 w-4" />
-              View Customer
+              View Agreement
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/invoice`}>
+            <Link to={`/invoice1`}>
               <FileText className="mr-2 h-4 w-4" />
               View Invoice
             </Link>

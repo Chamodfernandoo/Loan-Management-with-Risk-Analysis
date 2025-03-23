@@ -4,13 +4,12 @@ const Customer_dashbord = () => {
   return (
     <div className="grid grid-cols-1 gap-6 p-10 md:grid-cols-2 lg:grid-cols-3">
       <ButtonCard icon="" title="My Loans" href="/customer/loans" />
-      <ButtonCard icon="" title="Payment History" href="/customer/payments" />
-      <ButtonCard icon="" title="Loan Agreements" href="/customer/agreements" />
-      <ButtonCard icon="" title="My Profile" href="/customer/profile" />
+      <ButtonCard icon="" title="My Profile" href="/borrower/profile" />
       <ButtonCard icon="" title="Support" href="/customer/support" />
       <ButtonCard icon="" title="Find Lenders" href="/borrower/ads/all-ads" />
-
+      <ButtonCard icon="" title="Notification" href="/notifications" />
       <ButtonCard icon="" title="Lender dashbord(this is temparaly) " href="/" />
+      <ButtonCard icon="" title="Loans Summary" href="/borrower/loan-summary" />
 
     </div>
   )
