@@ -72,20 +72,20 @@ export default function CardsPage() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   // Get card type icon
-  const getCardTypeIcon = (cardType: string) => {
-    switch (cardType) {
-      case "visa":
-        return "💳 Visa"
-      case "mastercard":
-        return "💳 Mastercard"
-      case "amex":
-        return "💳 American Express"
-      case "discover":
-        return "💳 Discover"
-      default:
-        return "💳"
-    }
-  }
+//   const getCardTypeIcon = (cardType: string) => {
+//     switch (cardType) {
+//       case "visa":
+//         return "💳 Visa"
+//       case "mastercard":
+//         return "💳 Mastercard"
+//       case "amex":
+//         return "💳 American Express"
+//       case "discover":
+//         return "💳 Discover"
+//       default:
+//         return "💳"
+//     }
+//   }
 
   // Set card as default
   const setDefaultCard = (cardId: string) => {
@@ -115,10 +115,6 @@ export default function CardsPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
       <div className="flex items-center mb-6">
-        <Button variant="outline" className="mr-4" onClick={() => navigate("/borrower/loan-summary")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Loans
-        </Button>
         <h1 className="text-2xl sm:text-3xl font-bold">Payment Cards</h1>
       </div>
 
@@ -157,9 +153,9 @@ export default function CardsPage() {
                           {card.cardType === "visa" && <span className="text-blue-600 font-bold text-sm">VISA</span>}
                           {card.cardType === "mastercard" && <span className="text-red-600 font-bold text-sm">MC</span>}
                           {card.cardType === "amex" && <span className="text-blue-800 font-bold text-sm">AMEX</span>}
-                          {card.cardType === "discover" && (
+                          {card.cardType === "discover" && 
                             <span className="text-orange-600 font-bold text-sm">DISC</span>
-                          )}
+                          }
                         </div>
                       </div>
                       <div>
@@ -218,9 +214,6 @@ export default function CardsPage() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between border-t pt-6">
-          <Button variant="outline" onClick={() => navigate("/borrower/loan-summary")}>
-            Back to Loans
-          </Button>
           <Button onClick={() => navigate("/payments/make-payment")}>Make a Payment</Button>
         </CardFooter>
       </Card>

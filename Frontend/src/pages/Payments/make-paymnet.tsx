@@ -14,6 +14,8 @@ import {
   Clock,
   ShieldCheck,
   Plus,
+  CarIcon,
+  IdCard,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -176,12 +178,12 @@ export default function MakePaymentPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-8 max-w-2xl">
-      <div className="flex items-center mb-6">
-        <Button variant="outline" className="mr-4" onClick={() => navigate("/payments/cards")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Cards
-        </Button>
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Make Payment</h1>
+        <Button className="mr-4" onClick={() => navigate("/payments/cards")}>
+          <IdCard className="h-4 w-4 mr-2" />
+          Your Cards
+        </Button>
       </div>
 
       {paymentSuccess ? (
@@ -233,10 +235,10 @@ export default function MakePaymentPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between pt-2">
-            <Button variant="outline" onClick={() => navigate("/borrower/loan-summary")}>
-              Back to Loans
+            <Button variant="outline" onClick={() => navigate("")}>
+              Downlord Pdf
             </Button>
-            <Button onClick={() => navigate("/borrower/loan-summary")}>View Loan Details</Button>
+            <Button onClick={() => navigate("/invoice1")}>Payment history</Button>
           </CardFooter>
         </Card>
       ) : (
