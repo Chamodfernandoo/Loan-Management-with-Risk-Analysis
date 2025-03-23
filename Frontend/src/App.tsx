@@ -29,6 +29,7 @@ import BorrowerLoanSummaryPage from "./pages/Customer/Summary/page";
 import IndividualLoanPage from "./pages/Customer/Summary/individual-loan/page";
 import BorrowerSupportPage from "./pages/Customer/Support/page";
 import LenderSupportPage from "./pages/Lender/Support/support";
+import LenderNotificationsPage from "./pages/Lender/Notify/lender_noification";
 
 
 const App: React.FC = () => {
@@ -56,6 +57,7 @@ const App: React.FC = () => {
         <Route path="/invoice" element={<InvoiceView />} />
         <Route path="/lender/profile" element={<LenderProfilePage />} />
         <Route path="/lender/support" element={<LenderSupportPage />} />
+        <Route path="/lender/notifications" element={<LenderNotificationsPage />} />
         
         {/* Ads routes */}
         <Route path="/lender/ads" element={<AdsLayout />}>

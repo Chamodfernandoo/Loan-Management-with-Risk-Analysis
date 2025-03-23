@@ -10,6 +10,7 @@ const Lender_dashbord = () => {
       <ButtonCard icon="" title="Advertisements" href="/lender/ads/all-ads" />
       <ButtonCard icon="" title="Support" href="/lender/support" />
       <ButtonCard icon="" title="My Profile" href="/lender/profile" />
+      <ButtonCard icon="" title="Notifications" href="/lender/notifications" />
       <ButtonCard icon="" title="customer dashbord(this is temporaly)" href="/borrower" /> 
     </div>
   )
