@@ -26,7 +26,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 // Sample borrower data
 const borrowerData = {
-  firstName: "Chamud",
+  firstName: "Chamod",
   lastName: "Fernando",
   email: "chamud@example.com",
   phoneNumber: "077-3556635",
@@ -132,6 +132,7 @@ export default function BorrowerProfilePage() {
   }
 
   return (
+    <div className="flex items-center justify-center min-h-screen">
     <div className="container py-8 px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold">My Profile</h1>
@@ -565,5 +566,6 @@ export default function BorrowerProfilePage() {
         </DialogContent>
       </Dialog>
     </div>
+   </div>
   )
 }
