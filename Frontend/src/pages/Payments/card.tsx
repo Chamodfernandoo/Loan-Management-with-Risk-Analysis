@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, CreditCard, Plus, Trash2, MoreVertical, Edit, Star, StarOff } from "lucide-react"
+import { CreditCard, Plus, Trash2, MoreVertical, Edit, Star, StarOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -70,22 +70,6 @@ export default function CardsPage() {
   const [cards, setCards] = useState<PaymentCard[]>(sampleCards)
   const [cardToDelete, setCardToDelete] = useState<PaymentCard | null>(null)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
-
-  // Get card type icon
-//   const getCardTypeIcon = (cardType: string) => {
-//     switch (cardType) {
-//       case "visa":
-//         return "💳 Visa"
-//       case "mastercard":
-//         return "💳 Mastercard"
-//       case "amex":
-//         return "💳 American Express"
-//       case "discover":
-//         return "💳 Discover"
-//       default:
-//         return "💳"
-//     }
-//   }
 
   // Set card as default
   const setDefaultCard = (cardId: string) => {
