@@ -7,7 +7,7 @@ const Customer_dashbord = () => {
       <ButtonCard icon="" title="My Profile" href="/borrower/profile" />
       <ButtonCard icon="" title="Support" href="/borrower/support" />
       <ButtonCard icon="" title="Find Lenders" href="/borrower/ads/all-ads" />
-      <ButtonCard icon="" title="Notification" href="/notifications" />
+      <ButtonCard icon="" title="Notification" href="/borrower/notifications" />
       <ButtonCard icon="" title="Lender dashbord(this is temparaly) " href="/" />
       <ButtonCard icon="" title="Loans Summary" href="/borrower/loan-summary" />
 
