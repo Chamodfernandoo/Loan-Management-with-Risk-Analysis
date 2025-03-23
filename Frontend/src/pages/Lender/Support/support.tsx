@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   ArrowLeft,
   MessageSquare,
@@ -15,6 +14,7 @@ import {
   FileText,
   WrenchIcon,
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 // Form schema for contact form
 const contactFormSchema = z.object({
@@ -29,8 +30,7 @@ const contactFormSchema = z.object({
   category: z.string().min(1, "Please select a category"),
   message: z.string().min(20, "Message must be at least 20 characters"),
   attachments: z.any().optional(),
-})   
-
+})
 interface Term {
     title: string;
     content: string[];
@@ -39,37 +39,36 @@ interface Term {
 // FAQ data
 const faqData = [
   {
-    question: "How do I make a loan payment?",
+    question: "How do I create a new loan?",
     answer:
-      "You can make a loan payment through several methods: 1) Online through your account dashboard by clicking on 'My Loans' and selecting the loan you want to pay, 2) Through bank transfer to the provided account details, 3) In person at any of our partner locations. All payments are processed within 24 hours and will be reflected in your account.",
+      "To create a new loan, navigate to the 'Create Loan' section from your dashboard. Fill in the required customer information, loan amount, interest rate, and installment details. Review the information and submit the form to generate a loan agreement.",
   },
   {
-    question: "What happens if I miss a payment?",
+    question: "How can I track payments from borrowers?",
     answer:
-      "If you miss a payment, you'll receive a notification via email and SMS. A late fee may be applied according to your loan agreement. It's important to contact support as soon as possible to discuss your situation. We can work with you to arrange a payment plan or reschedule your payment to avoid further penalties.",
+      "You can track all payments from borrowers in the 'View Loan' section. Each loan has a detailed payment history showing paid, pending, and overdue installments. You can also generate payment reports for specific time periods.",
   },
   {
-    question: "How can I view my loan details and payment history?",
+    question: "What should I do if a borrower misses a payment?",
     answer:
-      "You can view your loan details and payment history by logging into your account and navigating to 'My Loans'. Select the specific loan you want to review to see all details including the original amount, interest rate, payment schedule, and complete payment history. You can also download statements for your records.",
+      "If a borrower misses a payment, the system will automatically mark it as overdue. You can send a payment reminder through the platform. If the issue persists, you can contact the borrower directly or use the built-in communication tools to discuss a payment plan.",
   },
   {
-    question: "Can I pay off my loan early?",
+    question: "How do I update my business information?",
     answer:
-      "Yes, you can pay off your loan early. There are no prepayment penalties. To make an early payoff, go to 'My Loans', select the loan you want to pay off, and click on 'Pay Off Loan'. The system will calculate the remaining balance including any accrued interest. You can then proceed with the payment.",
+      "To update your business information, go to 'My Profile' from the dashboard. Click on the 'Edit' button in the Personal Information section. Make the necessary changes and save your updates. For business registration changes, you may need to provide additional documentation.",
   },
   {
-    question: "How do I update my personal information?",
+    question: "Can I customize loan agreement templates?",
     answer:
-      "To update your personal information, go to 'My Profile' from the dashboard. Click on the 'Edit' button in the Personal Information section. Make the necessary changes and save your updates. For certain changes like your ID number or address, you may need to provide supporting documentation.",
+      "Yes, you can customize loan agreement templates. Go to 'Loan Agreements' from your dashboard, then select 'Manage Templates'. You can modify existing templates or create new ones. Make sure all customized templates comply with local regulations.",
   },
   {
-    question: "How can I find lenders in my area?",
+    question: "How do I create and manage advertisements?",
     answer:
-      "To find lenders in your area, go to 'Find Lenders' from your dashboard. You can filter lenders by location (district and city), loan types, interest rates, and loan amounts. Each lender profile includes their contact information, available loan types, and interest rates to help you make an informed decision.",
+      "To create and manage advertisements, navigate to the 'Advertisements' section from your dashboard. Click on 'Create Ad' to set up a new advertisement with your business details, loan offerings, and contact information. You can edit, pause, or delete your ads from the 'My Ads' section.",
   },
 ]
-
 const terms: Term[] = [
     {
       title: "1. Introduction",
@@ -131,10 +130,12 @@ const terms: Term[] = [
       },
   ];
 
-export default function BorrowerSupportPage() {
+
+export default function LenderSupportPage() {
   const navigate = useNavigate()
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState("faq")
+
 
   // Contact form
   const form = useForm<z.infer<typeof contactFormSchema>>({
@@ -167,11 +168,11 @@ export default function BorrowerSupportPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
       <div className="flex items-center mb-6">
-        <Button variant="outline" className="mr-16" onClick={() => navigate("/borrower")}>
+        <Button variant="outline" className="mr-4" onClick={() => navigate("/")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back 
+          Back to Dashboard
         </Button>
-        <h1 className="text-2xl sm:text-3xl font-bold">Borrower Support Center</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Lender Support Center</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -180,14 +181,14 @@ export default function BorrowerSupportPage() {
           <Card className="h-full">
             <CardHeader className="pb-3">
               <CardTitle>Contact Support</CardTitle>
-              <CardDescription>We're here to help with your loans</CardDescription>
+              <CardDescription>We're here to help with your lending business</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center">
                 <Phone className="h-5 w-5 text-primary mr-3" />
                 <div>
                   <p className="font-medium">Phone Support</p>
-                  <p className="text-sm text-muted-foreground">077-456-7890</p>
+                  <p className="text-sm text-muted-foreground">077-123-4567</p>
                   <p className="text-xs text-muted-foreground">Mon-Fri, 9AM-5PM</p>
                 </div>
               </div>
@@ -195,29 +196,28 @@ export default function BorrowerSupportPage() {
                 <Mail className="h-5 w-5 text-primary mr-3" />
                 <div>
                   <p className="font-medium">Email Support</p>
-                  <p className="text-sm text-muted-foreground">borrower-support@example.com</p>
+                  <p className="text-sm text-muted-foreground">lender-support@example.com</p>
                   <p className="text-xs text-muted-foreground">24-48 hour response time</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <MessageSquare className="h-5 w-5 text-primary mr-3" />
                 <div>
-                  <p className="font-medium">Support Request</p>
+                  <p className="font-medium">Live Chat</p>
                   <p className="text-sm text-muted-foreground">Available now</p>
                   <p className="text-xs text-muted-foreground">Instant support for quick questions</p>
                 </div>
               </div>
               <div className="flex items-center">
-                <WrenchIcon className="h-5 w-5 text-primary mr-3" />
-                <div>
-                  <p className="font-medium">Terms & Conditions</p>
-                  <p className="text-sm text-muted-foreground">Watch now</p>
-                  <p className="text-xs text-muted-foreground">You can watch and read Again,and Get Idea</p>
+                 <WrenchIcon className="h-5 w-5 text-primary mr-3" />
+                    <div>
+                    <p className="font-medium">Terms & Conditions</p>
+                    <p className="text-sm text-muted-foreground">Watch now</p>
+                    <p className="text-xs text-muted-foreground">You can watch and read Again,and Get Idea</p>
+                    </div>
                 </div>
-              </div>
             </CardContent>
           </Card>
-
         </div>
 
         {/* Main Content */}
@@ -233,7 +233,7 @@ export default function BorrowerSupportPage() {
                 Support Request
               </TabsTrigger>
               <TabsTrigger value="chat">
-                <WrenchIcon className="h-4 w-4 mr-2 hidden sm:inline" />
+              <WrenchIcon className="h-4 w-4 mr-2 hidden sm:inline" />
                 Terms & Conditions
               </TabsTrigger>
             </TabsList>
@@ -274,7 +274,7 @@ export default function BorrowerSupportPage() {
               </Card>
             </TabsContent>
 
-            {/* Suport req Tab */}
+            {/* Support Req Tab */}
             <TabsContent value="tickets" className="space-y-6">
             <Card>
                 <CardHeader className="pb-3">
@@ -312,8 +312,9 @@ export default function BorrowerSupportPage() {
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="account">Account Management</SelectItem>
-                                <SelectItem value="loans">Loan Questions</SelectItem>
-                                <SelectItem value="payments">Payment Issues</SelectItem>
+                                <SelectItem value="loans">Loan Management</SelectItem>
+                                <SelectItem value="payments">Payments</SelectItem>
+                                <SelectItem value="customers">Customer Management</SelectItem>
                                 <SelectItem value="technical">Technical Issue</SelectItem>
                                 <SelectItem value="other">Other</SelectItem>
                               </SelectContent>
@@ -370,31 +371,30 @@ export default function BorrowerSupportPage() {
             {/* Terms and Conditions Tab */}
             <TabsContent value="chat" className="space-y-6">
                 <Card className="max-w-4xl mx-auto h-full">
-              <CardHeader>
-                <h1 className="text-2xl font-bold text-gray-900">Terms and Conditions</h1>
-              </CardHeader>
-              
-              <CardContent>
-                <ScrollArea className="h-[60vh] rounded-md border p-4">
-                  <div className="space-y-6">
-                    {terms.map((term, index) => (
-                      <div key={index} className="space-y-2">
-                        <h2 className="text-xl font-semibold text-gray-800">
-                          {term.title}
-                        </h2>
-                        <div className="space-y-2">
-                          {term.content.map((paragraph, pIndex) => (
-                            <p key={pIndex} className="text-gray-600">
-                              {paragraph}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                    <CardHeader>
+                        <h1 className="text-2xl font-bold text-gray-900">Terms and Conditions</h1>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[60vh] rounded-md border p-4">
+                            <div className="space-y-6">
+                                {terms.map((term, index) => (
+                                    <div key={index} className="space-y-2">
+                                    <h2 className="text-xl font-semibold text-gray-800">
+                                        {term.title}
+                                        </h2>
+                                        <div className="space-y-2">
+                                          {term.content.map((paragraph, pIndex) => (
+                                            <p key={pIndex} className="text-gray-600">
+                                              {paragraph}
+                                            </p>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                            </ScrollArea>
+                    </CardContent>
+                 </Card>
             </TabsContent>
           </Tabs>
         </div>
