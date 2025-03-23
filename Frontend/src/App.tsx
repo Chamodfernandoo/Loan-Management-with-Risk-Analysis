@@ -31,6 +31,10 @@ import BorrowerSupportPage from "./pages/Customer/Support/page";
 import LenderSupportPage from "./pages/Lender/Support/support";
 import LenderNotificationsPage from "./pages/Lender/Notify/lender_noification";
 import BorrowerNotificationsPage from "./pages/Customer/Notification/noti";
+import AddCardPage from "./pages/Payments/add-card";
+import CardsPage from "./pages/Payments/card";
+import MakePaymentPage from "./pages/Payments/make-paymnet";
+import PaymentHistoryPage from "./pages/Payments/payment-history";
 
 
 const App: React.FC = () => {
@@ -67,6 +71,12 @@ const App: React.FC = () => {
           <Route path="create" element={<CreateAdPage />} />
           <Route path=":id" element={<AdDetailPage />} />
         </Route>
+
+         {/* Payment routes */}
+         <Route path="/payments/add-card" element={<AddCardPage />} />
+        <Route path="/payments/cards" element={<CardsPage />} />
+        <Route path="/payments/make-payment" element={<MakePaymentPage />} />
+        <Route path="/payments/payment-history" element={<PaymentHistoryPage />} />
 
       </Routes>
 
