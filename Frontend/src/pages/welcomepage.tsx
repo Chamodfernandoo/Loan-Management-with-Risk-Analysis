@@ -1,6 +1,6 @@
-import React from 'react';
+
 import { Button } from "@/components/ui/button";
-import { ArrowRight, LogIn, UserPlus } from 'lucide-react';
+import {  LogIn, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom'
 
 const Welcomepage = () => {
@@ -9,12 +9,8 @@ const Welcomepage = () => {
     {/* Header */}
     <header className="p-6 flex justify-between items-center">
       <div className="flex items-center space-x-3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="m2 17 10 5 10-5"/>
-          <path d="m2 12 10 5 10-5"/>
-        </svg>
-        <span className="text-2xl font-bold text-indigo-800">PAY ME</span>
+        <img src="/src/assets/logo.png" alt="logo" className="w-10 h-10" />
+        <span className="text-3xl font-bold text-blue-700">PAY ME</span>
       </div>
     </header>
 
