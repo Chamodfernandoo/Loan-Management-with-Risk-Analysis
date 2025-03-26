@@ -135,7 +135,7 @@ export default function LenderProfilePage() {
     <div className="flex items-center justify-center min-h-screen">
     <div className="container  py-8 px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold">My Profile</h1>
+        <h1 className="text-3xl font-bold text-blue-600">My Profile</h1>
         <Button variant="destructive" onClick={() => setLogoutDialogOpen(true)} className="sm:self-end">
           <LogOut className="mr-2 h-4 w-4" />
           Logout
@@ -200,7 +200,7 @@ export default function LenderProfilePage() {
         {/* Main Content */}
         <div className="md:col-span-2">
           <Tabs defaultValue="personal-info" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 ">
               <TabsTrigger value="personal-info">Personal Info</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
             </TabsList>
@@ -208,7 +208,7 @@ export default function LenderProfilePage() {
             {/* Personal Info Tab */}
             <TabsContent value="personal-info" className="space-y-4 pt-4">
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 text-blue-600">
                   <div className="flex justify-between items-center">
                     <CardTitle>Personal Information</CardTitle>
                     <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
@@ -372,7 +372,7 @@ export default function LenderProfilePage() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 text-blue-600">
                   <CardTitle>Address Information</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -412,7 +412,7 @@ export default function LenderProfilePage() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 text-blue-600">
                   <CardTitle>Document Verification</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -448,7 +448,7 @@ export default function LenderProfilePage() {
             {/* Security Tab */}
             <TabsContent value="security" className="space-y-4 pt-4">
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 text-blue-600">
                   <CardTitle>Change Password</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -537,7 +537,7 @@ export default function LenderProfilePage() {
                         )}
                       />
 
-                      <Button type="submit" className="w-full">
+                      <Button type="submit" className="w-full bg-blue-500">
                         Change Password
                       </Button>
                     </form>
@@ -546,7 +546,7 @@ export default function LenderProfilePage() {
               </Card>
 
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 text-blue-600">
                   <CardTitle>Account Security</CardTitle>
                 </CardHeader>
                 <CardContent>

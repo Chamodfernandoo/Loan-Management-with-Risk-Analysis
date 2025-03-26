@@ -170,16 +170,16 @@ export default function LenderSupportPage() {
       <div className="flex items-center mb-6">
         <Button variant="outline" className="mr-4" onClick={() => navigate("/")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
+          
         </Button>
-        <h1 className="text-2xl sm:text-3xl font-bold">Lender Support Center</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-600">Lender Support Center</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Sidebar - Contact Options */}
         <div className="lg:col-span-1 space-y-6">
           <Card className="h-full">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 text-blue-600">
               <CardTitle>Contact Support</CardTitle>
               <CardDescription>We're here to help with your lending business</CardDescription>
             </CardHeader>
@@ -241,7 +241,7 @@ export default function LenderSupportPage() {
             {/* FAQ Tab */}
             <TabsContent value="faq" className="space-y-6">
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-3 text-blue-600">
                   <CardTitle>Frequently Asked Questions</CardTitle>
                   <CardDescription>Find quick answers to common questions</CardDescription>
                 </CardHeader>
@@ -277,7 +277,7 @@ export default function LenderSupportPage() {
             {/* Support Req Tab */}
             <TabsContent value="tickets" className="space-y-6">
             <Card>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-3 text-blue-600">
                   <CardTitle>Submit a Support Request</CardTitle>
                   <CardDescription>We'll get back to you as soon as possible</CardDescription>
                 </CardHeader>
@@ -372,7 +372,7 @@ export default function LenderSupportPage() {
             <TabsContent value="chat" className="space-y-6">
                 <Card className="max-w-4xl mx-auto h-full">
                     <CardHeader>
-                        <h1 className="text-2xl font-bold text-gray-900">Terms and Conditions</h1>
+                        <h1 className="text-2xl font-bold text-blue-600">Terms and Conditions</h1>
                         </CardHeader>
                         <CardContent>
                             <ScrollArea className="h-[60vh] rounded-md border p-4">

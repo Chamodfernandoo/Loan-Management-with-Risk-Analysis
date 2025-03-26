@@ -108,7 +108,7 @@ const Create_loan = () => {
         Back
       </Button>
       <Card className="shadow-lg">
-        <CardHeader className="bg-primary text-primary-foreground">
+        <CardHeader className="bg-blue-400">
           <CardTitle className="text-2xl font-bold">Add Order</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -128,7 +128,7 @@ const Create_loan = () => {
                             <Button
                               type="button"
                               onClick={handleSearch}
-                              className="rounded-l-none"
+                              className="rounded-l-none bg-blue-500"
                               disabled={isSearching}
                             >
                               {isSearching ? (

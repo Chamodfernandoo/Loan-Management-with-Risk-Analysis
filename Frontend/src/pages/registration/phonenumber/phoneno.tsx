@@ -67,10 +67,10 @@ const Phoneno = ({ onDataChange }: PhonenoProps) => {
                     onValueChange={field.onChange}
                     className="justify-center"
                   >
-                    <ToggleGroupItem value="lender" className="w-[120px] data-[state=on]:bg-blue-600">
+                    <ToggleGroupItem value="lender" className="w-[120px] data-[state=on]:bg-blue-300">
                       Lender
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="customer" className="w-[120px] data-[state=on]:bg-blue-600">
+                    <ToggleGroupItem value="customer" className="w-[120px] data-[state=on]:bg-blue-300">
                       Customer
                     </ToggleGroupItem>
                   </ToggleGroup>

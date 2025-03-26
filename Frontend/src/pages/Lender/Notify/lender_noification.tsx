@@ -199,14 +199,14 @@ export default function LenderNotificationsPage() {
         <Button variant="outline" className="mr-4" onClick={() => navigate("/")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
         </Button>
-        <h1 className="text-2xl sm:text-3xl font-bold">Notifications</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-600">Notifications</h1>
         {unreadCount > 0 && <Badge className="ml-3 bg-primary">{unreadCount} unread</Badge>}
       </div>
 
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
+            <div className="text-blue-600">
               <CardTitle>Your Notifications</CardTitle>
               <CardDescription>Stay updated on payments, loans, and system updates</CardDescription>
             </div>

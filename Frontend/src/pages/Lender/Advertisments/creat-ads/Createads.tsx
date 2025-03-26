@@ -124,7 +124,7 @@ const CreateAdPage: React.FC = () => {
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-3xl">
       <Card className="shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl sm:text-2xl font-bold">Create New Ad</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600">Create New Ad</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>

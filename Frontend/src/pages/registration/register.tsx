@@ -146,7 +146,7 @@ export default function RegistrationPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-8 bg-background min-h-screen">
-      <h1 className="text-2xl font-bold text-center">Registration</h1>
+      <h1 className="text-2xl font-bold text-center text-blue-700">Registration</h1>
 
       {showSuccess && (
         <Alert className="bg-green-50 border-green-200">
@@ -183,7 +183,7 @@ export default function RegistrationPage() {
             </Button>
           )}
 
-          <Button className="ml-auto" onClick={handleNext} disabled={nextButtonDisabled}>
+          <Button className="ml-auto" onClick={handleNext} >
             {isLastStep ? "Submit" : "Next"}
           </Button>
         </div>

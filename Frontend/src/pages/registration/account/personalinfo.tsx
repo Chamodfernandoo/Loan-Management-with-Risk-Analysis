@@ -74,7 +74,7 @@ const Personalinfo = ({ onDataChange }: PersonalinfoProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-blue-600">Create an account</h1>
       </div>
 
       <Form {...form}>
@@ -251,10 +251,10 @@ const Personalinfo = ({ onDataChange }: PersonalinfoProps) => {
                       onValueChange={field.onChange}
                       className="justify-start"
                     >
-                      <ToggleGroupItem value="male" className="flex-1 data-[state=on]:bg-blue-600">
+                      <ToggleGroupItem value="male" className="flex-1 data-[state=on]:bg-blue-300">
                         Male
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="female" className="flex-1 data-[state=on]:bg-blue-600">
+                      <ToggleGroupItem value="female" className="flex-1 data-[state=on]:bg-blue-300">
                         Female
                       </ToggleGroupItem>
                     </ToggleGroup>

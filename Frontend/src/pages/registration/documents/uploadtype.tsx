@@ -165,7 +165,7 @@ const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
   return (
     <div className="space-y-6">
       <div className="rounded-lg w-full">
-        <h2 className="text-2xl font-bold mb-6">Document Verification</h2>
+        <h2 className="text-2xl font-bold mb-6 text-blue-600">Document Verification</h2>
         <p className="text-muted-foreground mb-6">
           Upload your {docType || "identification document"} for verification.
         </p>

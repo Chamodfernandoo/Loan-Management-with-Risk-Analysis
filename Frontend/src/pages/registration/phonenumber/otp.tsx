@@ -53,7 +53,7 @@ export const InputOTPForm = ({ onDataChange, phoneNumber }: InputOTPFormProps) =
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Verify Your Phone Number</h2>
+        <h2 className="text-2xl font-bold text-blue-600">Verify Your Phone Number</h2>
         <p className="text-muted-foreground">We've sent a verification code to {phoneNumber || "your phone"}</p>
       </div>
 
