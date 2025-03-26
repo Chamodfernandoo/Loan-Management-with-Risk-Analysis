@@ -59,7 +59,6 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<Login />}/>
         <Route path="/" element={<Welcomepage/>}/>
-
       </Routes>
 
       {/* lender routes */}
