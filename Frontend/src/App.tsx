@@ -35,6 +35,9 @@ import AddCardPage from "./pages/Payments/add-card";
 import CardsPage from "./pages/Payments/card";
 import MakePaymentPage from "./pages/Payments/make-paymnet";
 import PaymentHistoryPage from "./pages/Payments/payment-history";
+import RegistrationPage from "./pages/registration/register";
+import Login from "./pages/Login";
+import Welcomepage from "./pages/welcomepage";
 
 
 const App: React.FC = () => {
@@ -43,6 +46,7 @@ const App: React.FC = () => {
      {/* // <Router> */}
 
      <Routes>
+        <Route path="/regiter" element={<RegistrationPage />} />
         <Route path="/register1" element={<Phoneno />} />
         <Route path="/register2" element={<InputOTPForm />} />
         <Route path="/register3" element={<Personalinfo />} />
@@ -52,9 +56,15 @@ const App: React.FC = () => {
         <Route path="/terms" element={<Termsconditions />} />
       </Routes>
 
+      <Routes>
+        <Route path="/login" element={<Login />}/>
+        <Route path="/" element={<Welcomepage/>}/>
+
+      </Routes>
+
       {/* lender routes */}
       <Routes>
-        <Route path="/" element={<Lender_dashbord/>} />
+        <Route path="/lender" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<LoanHistoryPage />} />
           <Route path="/agreement" element={<Agreement />} />
           <Route path="/customer-history" element={<CustomerLoanHistoryPage/>} />

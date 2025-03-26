@@ -1,100 +1,148 @@
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Stepper, Step } from "@/components/ui/stepper"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import React from "react"
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { Stepper, StepperItem, StepperIndicator, StepperTitle, StepperSeparator } from "../../components/ui/stepper"
+import { Button } from "../../components/ui/button"
+import { Alert, AlertDescription } from "../../components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
 
-// Import the provided components
-import Phoneno from "@/components/registration/phoneno"
-import { InputOTPForm } from "@/components/registration/input-otp-form"
-import Personalinfo from "@/components/registration/personalinfo"
-import Addressinfo from "@/components/registration/addressinfo"
-import Doctype from "@/components/registration/doctype"
-import Termsconditions from "@/components/registration/termsconditions"
+// Import components from your existing file structure
+import Phoneno from "./phonenumber/phoneno"
+import { InputOTPForm } from "./phonenumber/otp"
+import Personalinfo from "./account/personalinfo"
+import Addressinfo from "./account/addressinfo"
+import Doctype from "./documents/doctype"
+import Uploadtype from "./documents/uploadtype"
+import Termsconditions from "../Terms&conditions"
 
 export default function RegistrationPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState({
-    phoneData: null,
-    otpData: null,
-    personalData: null,
-    addressData: null,
-    docTypeData: null,
-    uploadData: null,
+  const [activeStep, setActiveStep] = useState(0)
+  interface FormDataType {
+    phone: { phoneNumber?: string } & Record<string, any>;
+    otp: Record<string, any>;
+    personal: Record<string, any>;
+    address: Record<string, any>;
+    docType: { documentType?: string } & Record<string, any>;
+    upload: Record<string, any>;
+    termsAccepted: boolean;
+  }
+
+  const [formData, setFormData] = useState<FormDataType>({
+    phone: {},
+    otp: {},
+    personal: {},
+    address: {},
+    docType: {},
+    upload: {},
     termsAccepted: false,
   })
+  const [isNextDisabled, setIsNextDisabled] = useState(true)
   const [showSuccess, setShowSuccess] = useState(false)
-  const router = useRouter()
+  const navigate = useNavigate()
 
-  const steps = [
-    { label: "Phone", component: Phoneno },
-    { label: "OTP", component: InputOTPForm },
-    { label: "Personal", component: Personalinfo },
-    { label: "Address", component: Addressinfo },
-    { label: "Document", component: Doctype },
-    { label: "Upload", component: Termsconditions },
-    { label: "Terms", component: Termsconditions },
-  ]
+  // Current step data
+  const [currentStepData, setCurrentStepData] = useState(null)
+
+  // Update form data when current step data changes
+  useEffect(() => {
+    if (currentStepData !== null) {
+      const newFormData = { ...formData }
+
+      switch (activeStep) {
+        case 0:
+          newFormData.phone = currentStepData
+          break
+        case 1:
+          newFormData.otp = currentStepData
+          break
+        case 2:
+          newFormData.personal = currentStepData
+          break
+        case 3:
+          newFormData.address = currentStepData
+          break
+        case 4:
+          newFormData.docType = currentStepData
+          break
+        case 5:
+          newFormData.upload = currentStepData
+          break
+        case 6:
+          newFormData.termsAccepted = currentStepData
+          break
+      }
+
+      setFormData(newFormData)
+      setIsNextDisabled(false)
+    }
+  }, [currentStepData, activeStep])
+
+  // Reset current step data when active step changes
+  useEffect(() => {
+    setCurrentStepData(null)
+    setIsNextDisabled(true)
+  }, [activeStep])
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+    if (activeStep < 6) {
+      setActiveStep(activeStep + 1)
+    } else {
+      // On final step submission
+      setShowSuccess(true)
+
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        navigate("/login")
+      }, 2000)
     }
   }
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+    if (activeStep > 0) {
+      setActiveStep(activeStep - 1)
     }
   }
 
-  const handleSubmit = () => {
-    // Show success message
-    setShowSuccess(true)
-
-    // Redirect to login page after 2 seconds
-    setTimeout(() => {
-      router.push("/login")
-    }, 2000)
+  const handleDataChange = (data: any) => {
+    setCurrentStepData(data)
   }
 
-  const handleStepDataChange = (data) => {
-    // Update form data based on current step
-    const updatedFormData = { ...formData }
+  // Determine if the next button should be disabled
+  const isLastStep = activeStep === 6
+  const nextButtonDisabled = isNextDisabled || (isLastStep && !formData.termsAccepted)
 
-    switch (currentStep) {
+  // Render the current step component
+  const renderCurrentStep = () => {
+    switch (activeStep) {
       case 0:
-        updatedFormData.phoneData = data
-        break
+        return <Phoneno onDataChange={handleDataChange} />
       case 1:
-        updatedFormData.otpData = data
-        break
+        return <InputOTPForm onDataChange={handleDataChange} phoneNumber={formData.phone?.phoneNumber} />
       case 2:
-        updatedFormData.personalData = data
-        break
+        return <Personalinfo onDataChange={handleDataChange} />
       case 3:
-        updatedFormData.addressData = data
-        break
+        return <Addressinfo onDataChange={handleDataChange} />
       case 4:
-        updatedFormData.docTypeData = data
-        break
+        return <Doctype onDataChange={handleDataChange} />
       case 5:
-        updatedFormData.uploadData = data
-        break
+        return <Uploadtype onDataChange={handleDataChange} docType={formData.docType?.documentType} />
       case 6:
-        updatedFormData.termsAccepted = data
-        break
+        return <Termsconditions onChange={handleDataChange} />
       default:
-        break
+        return null
     }
-
-    setFormData(updatedFormData)
   }
 
-  // Get current component
-  const CurrentStepComponent = steps[currentStep].component
-  const isLastStep = currentStep === steps.length - 1
+  const steps = [
+    { title: "Phone" },
+    { title: "OTP" },
+    { title: "Personal" },
+    { title: "Address" },
+    { title: "Document" },
+    { title: "Upload" },
+    { title: "Terms" },
+  ]
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-8 bg-background min-h-screen">
@@ -110,34 +158,34 @@ export default function RegistrationPage() {
       )}
 
       <div className="py-4">
-        <Stepper value={currentStep} className="w-full">
+        <Stepper value={activeStep} className="w-full">
           {steps.map((step, index) => (
-            <Step key={index} description={step.label} />
+            <React.Fragment key={index}>
+              <StepperItem step={index} completed={activeStep > index}>
+                <StepperIndicator />
+                <div className="ml-2">
+                  <StepperTitle>{step.title}</StepperTitle>
+                </div>
+              </StepperItem>
+              {index < steps.length - 1 && <StepperSeparator />}
+            </React.Fragment>
           ))}
         </Stepper>
       </div>
 
       <div className="mt-8 p-6 border rounded-lg bg-card">
-        <div className="registration-step-content">
-          <CurrentStepComponent onStepComplete={handleStepDataChange} formData={formData} onNext={handleNext} />
-        </div>
+        {renderCurrentStep()}
 
         <div className="flex justify-between mt-8">
-          {currentStep > 0 && (
+          {activeStep > 0 && (
             <Button variant="outline" onClick={handleBack}>
               Back
             </Button>
           )}
 
-          {!isLastStep ? (
-            <Button className="ml-auto" onClick={handleNext}>
-              Next
-            </Button>
-          ) : (
-            <Button className="ml-auto" onClick={handleSubmit} disabled={!formData.termsAccepted}>
-              Submit
-            </Button>
-          )}
+          <Button className="ml-auto" onClick={handleNext} disabled={nextButtonDisabled}>
+            {isLastStep ? "Submit" : "Next"}
+          </Button>
         </div>
       </div>
     </div>
