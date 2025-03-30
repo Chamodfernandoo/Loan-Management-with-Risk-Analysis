@@ -20,11 +20,11 @@ const Login = () => {
       <div className="w-full min-h-screen flex flex-col xl:flex-row justify-center items-center">
         {/* left side */}
         <div className="w-full xl:w-1/2 xl:h-screen flex flex-col sm:justify-center items-center  md:pt-12 p-5 ">
-          <div className="flex flex-col w-full lg:h-full pt-10  bg-lime-50 rounded-3xl justify-end items-end ">
+          <div className="flex flex-col w-full lg:h-full pt-10  bg-blue-50 rounded-3xl justify-end items-end ">
             <div className="w-5/6">
               <div className="flex flex-col sm:flex-row sm:space-x-8 space-y-4 sm:space-y-0">
                 <div>
-                  <img src="/public/flag.png" alt="logo" className="w-[60px] h-[40px]  lg:w-[80px] lg:h-[50px]"></img>
+                  <img src="" alt="logo" className="w-[60px] h-[40px]  lg:w-[80px] lg:h-[50px]"></img>
                 </div>
                 <div className="text-xl lg:text-2xl font-medium text-gray-900">
                   <h2>Welcome!<br/>
@@ -37,7 +37,7 @@ const Login = () => {
                 
               </div>
               <div className="pt-4 md:pt-10">
-                <img src="/public/dashbord.png" alt="dashbord" className="w-full h-[300px] md-h-[400px] lg:h-[550px] object-fit"></img>
+                <img src="/src/assets/lopic.png" alt="dashbord" className="rounded-2xl w-full h-[300px] md-h-[400px] lg:h-[550px] object-cover"></img>
               </div>
             </div>
           </div>
@@ -88,7 +88,7 @@ const Login = () => {
                   <div className="flex justify-center items-center">
                     <a href="#" className="text-sm text-blue-500">Forgot password?</a>
                   </div>
-                  <Button type="submit" className="w-full h-12 lg:h-14 bg-orange-600">Submit</Button>
+                  <Button type="submit" className="w-full h-12 lg:h-14 bg-blue-600">Submit</Button>
                 </form>
               </Form>
             </div>

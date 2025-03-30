@@ -117,11 +117,11 @@ export default function CustomerLoanHistoryPage() {
       </Button>
       <Card>
         <CardHeader className="pb-3 items-center">
-          <CardTitle className="text-2xl font-bold">Customer History</CardTitle>
+          <CardTitle className="text-2xl font-bold text-blue-500">Customer History</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
             <div>
-                <p className="text-xl font-bold">Search Customer</p>
+                <p className="text-xl font-bold text-blue-500">Search Customer</p>
             </div>
           {/* Search Bar */}
           <div className="flex gap-2">

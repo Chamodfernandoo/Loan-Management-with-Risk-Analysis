@@ -10,7 +10,7 @@ const AdsLayout: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <h1 className="text-xl font-bold">Lender Ads</h1>
+          <h1 className="text-xl font-bold text-blue-700">Lender Ads</h1>
           <nav className="flex items-center space-x-2 sm:space-x-4">
             <Button
               variant={location.pathname.includes("/lender/ads/all-ads") ? "default" : "ghost"}

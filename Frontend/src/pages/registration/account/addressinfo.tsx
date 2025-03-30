@@ -3,13 +3,21 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { ChevronDown } from "lucide-react"
+import { useEffect } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+import { Button } from "../../../components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../../components/ui/form"
+import { Input } from "../../../components/ui/input"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../../../components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "../../../components/ui/popover"
+import { cn } from "../../../lib/utils"
 
 // Example data - replace with your actual data
 const provinces = [
@@ -51,7 +59,7 @@ const districts = {
     { label: "Trincomalee", value: "trincomalee" },
     { label: "Batticaloa", value: "batticaloa" },
     { label: "Ampara", value: "ampara" },
-  ],  
+  ],
   "north-western": [
     { label: "Kurunegala", value: "kurunegala" },
     { label: "Puttalam", value: "puttalam" },
@@ -67,7 +75,7 @@ const districts = {
   sabaragamuwa: [
     { label: "Ratnapura", value: "ratnapura" },
     { label: "Kegalle", value: "kegalle" },
-  ],  
+  ],
 }
 
 const formSchema = z.object({
@@ -82,12 +90,16 @@ const formSchema = z.object({
   postalCode: z.string().min(5, "Postal code must be at least 5 characters"),
 })
 
+interface AddressInfoProps {
+  onDataChange?: (data: any) => void
+}
 
-const Addressinfo = () => {
+const Addressinfo = ({ onDataChange }: AddressInfoProps) => {
   const [availableDistricts, setAvailableDistricts] = React.useState(districts.western)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
   })
 
   const onProvinceChange = React.useCallback(
@@ -98,178 +110,183 @@ const Addressinfo = () => {
     [form],
   )
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  // Watch for form changes and notify parent when valid
+  const formValues = form.watch()
+  const isValid = form.formState.isValid
+
+  useEffect(() => {
+    if (isValid && onDataChange) {
+      onDataChange(formValues)
+    }
+  }, [formValues, isValid, onDataChange])
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    if (onDataChange) {
+      onDataChange(values)
+    }
   }
+
   return (
-    <>
-      <div className="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
-      <div className="w-full max-w-md space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-blue-600">Setup your Address</h1>
-        </div>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="province"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Select province</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
-                        >
-                          {field.value
-                            ? provinces.find((province) => province.value === field.value)?.label
-                            : "Select province"}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search province..." />
-                        <CommandList>
-                          <CommandEmpty>No province found.</CommandEmpty>
-                          <CommandGroup>
-                            {provinces.map((province) => (
-                              <CommandItem
-                                value={province.label}
-                                key={province.value}
-                                onSelect={() => {
-                                  field.onChange(province.value)
-                                  onProvinceChange(province.value)
-                                }}
-                              >
-                                <ChevronDown
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    province.value === field.value ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {province.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="district"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Select District</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
-                        >
-                          {field.value
-                            ? availableDistricts.find((district) => district.value === field.value)?.label
-                            : "Select district"}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search district..." />
-                        <CommandList>
-                          <CommandEmpty>No district found.</CommandEmpty>
-                          <CommandGroup>
-                            {availableDistricts.map((district) => (
-                              <CommandItem
-                                value={district.label}
-                                key={district.value}
-                                onSelect={() => {
-                                  field.onChange(district.value)
-                                }}
-                              >
-                                <ChevronDown
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    district.value === field.value ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {district.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Enter city</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your city" {...field} className="bg-muted" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Enter your address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your full address" {...field} className="bg-muted" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="postalCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Postal code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter postal code" {...field} className="bg-muted" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" className="w-full">
-              Save Address
-            </Button>
-          </form>
-        </Form>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-blue-600">Setup your Address</h1>
       </div>
+
+      <Form {...form}>
+        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <FormField
+            control={form.control}
+            name="province"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Select province</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                      >
+                        {field.value
+                          ? provinces.find((province) => province.value === field.value)?.label
+                          : "Select province"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search province..." />
+                      <CommandList>
+                        <CommandEmpty>No province found.</CommandEmpty>
+                        <CommandGroup>
+                          {provinces.map((province) => (
+                            <CommandItem
+                              value={province.label}
+                              key={province.value}
+                              onSelect={() => {
+                                field.onChange(province.value)
+                                onProvinceChange(province.value)
+                              }}
+                            >
+                              <ChevronDown
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  province.value === field.value ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                              {province.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="district"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Select District</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                      >
+                        {field.value
+                          ? availableDistricts.find((district) => district.value === field.value)?.label
+                          : "Select district"}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search district..." />
+                      <CommandList>
+                        <CommandEmpty>No district found.</CommandEmpty>
+                        <CommandGroup>
+                          {availableDistricts.map((district) => (
+                            <CommandItem
+                              value={district.label}
+                              key={district.value}
+                              onSelect={() => {
+                                field.onChange(district.value)
+                              }}
+                            >
+                              <ChevronDown
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  district.value === field.value ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                              {district.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Enter city</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your city" {...field} className="bg-muted" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Enter your address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your full address" {...field} className="bg-muted" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="postalCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Postal code</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter postal code" {...field} className="bg-muted" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
     </div>
-    </>
   )
 }
 

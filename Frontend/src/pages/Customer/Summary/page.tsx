@@ -164,35 +164,7 @@ export default function BorrowerLoanSummaryPage() {
             />
           </div>
 
-          {/* Next Payment Card */}
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Next Payment Due</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <CalendarClock className="h-5 w-5 text-primary mr-2" />
-                    <span className="font-medium">{format(borrowerData.stats.nextPaymentDue, "MMMM dd, yyyy")}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <DollarSign className="h-5 w-5 text-primary mr-2" />
-                    <span className="font-medium">Rs {borrowerData.stats.nextPaymentAmount.toLocaleString()}</span>
-                  </div>
-                </div>
-                <div className="mt-4 sm:mt-0">
-                  <Badge className={daysUntilNextPayment <= 3 ? "bg-red-500" : "bg-amber-500"}>
-                    <Clock className="h-3.5 w-3.5 mr-1" />
-                    {daysUntilNextPayment} days remaining
-                  </Badge>
-                  <div className="mt-2">
-                    <Button size="sm">Pay Now</Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+         
 
           {/* Loan Summary Card */}
           <Card className="bg-white border shadow-sm">

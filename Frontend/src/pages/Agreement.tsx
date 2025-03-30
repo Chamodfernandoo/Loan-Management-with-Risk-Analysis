@@ -49,7 +49,7 @@ const Agreement = () => {
       <Card className="shadow-lg">
         <CardHeader className="bg-primary/5 border-b">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle className="text-2xl font-bold text-primary">ORDER Agreement</CardTitle>
+            <CardTitle className="text-2xl font-bold text-blue-600 ">ORDER Agreement</CardTitle>
             <div className="text-sm font-medium border border-gray-300 rounded px-2 py-1">
               Date: {today}
             </div>

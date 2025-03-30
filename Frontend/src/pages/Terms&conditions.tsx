@@ -1,119 +1,102 @@
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from "react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
-interface Term {
-  title: string;
-  content: string[];
+interface TermsConditionsProps {
+  onChange?: (accepted: boolean) => void
 }
 
-const Termsconditions = () => {
-  
-    const terms: Term[] = [
-      {
-        title: "1. Introduction",
-        content: [
-          "Welcome to [Your Loan Management App Name] ( By using our platform, you agree to comply with these Terms and Conditions. Please read them carefully before proceeding."
-        ]
-      },
-      {
-        title: "2. Eligibility",
-        content: [
-          "Users must be at least 18 years old or have legal authorization to enter into financial agreements.",
-          "Loan providers must be registered and authorized financial entities."
-        ]
-      },
-      {
-        title: "3. User Responsibilities",
-        content: [
-          "Borrowers are responsible for repaying loans as per the agreed terms.",
-          "Lenders must ensure transparency in loan terms, interest rates, and repayment conditions.",
-          "Users must not engage in fraudulent activities or misrepresent their financial information."
-        ]
-      },
-      {
-        title: "4. Loan Transactions and Payments",
-        content: [
-          "All loan agreements are between the borrower and the lender. The platform facilitates management but does not provide loans.",
-          "Payments can be made online via the supported payment gateways or manually through the lender.",
-          "Late payments may incur additional interest or penalties as per the lender's policy."
-        ]
-      },
-        {
-            title: "5. QR Code-Based Loan Verification",
-            content: [
-            "Every transaction is verified using a unique QR code assigned to each customer.",
-            "Lenders can only update loan statuses when the customer is physically present to scan the QR code."
-            ]
-        },
-        {
-            title: "6. Privacy Policy",
-            content: [
-            "We collect and store customer data securely in compliance with data protection laws",
-            "User data will only be shared with authorized lenders upon consent.",
-            "Unauthorized access, misuse, or sharing of customer data is strictly prohibited."
-            ]
-        },
-        {
-            title: "7. Dispute Resolution",
-            content: [
-            "Any disputes between borrowers and lenders must be resolved directly.",
-            "The platform is not liable for any financial losses or disputes arising from loan agreements."
-            ]
-        },
-        {
-            title: "8.  Loan Risk Analysis and Credit Assessment",
-            content: [
-            "The platform may use AI-based models to analyze customer credit risk.",
-            "Risk scores are generated based on historical payment data but do not guarantee approval or denial of loans."
-            ]
-        },
-    ];
-  
-    return (
-      <div className="h-screen bg-gray-50 p-4 md:p-8">
-        <Card className="max-w-4xl mx-auto h-full">
-          <CardHeader>
-            <h1 className="text-2xl font-bold text-gray-900">Terms and Conditions</h1>
-          </CardHeader>
-          
-          <CardContent>
-            <ScrollArea className="h-[70vh] rounded-md border p-4">
-              <div className="space-y-6">
-                {terms.map((term, index) => (
-                  <div key={index} className="space-y-2">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                      {term.title}
-                    </h2>
-                    <div className="space-y-2">
-                      {term.content.map((paragraph, pIndex) => (
-                        <p key={pIndex} className="text-gray-600">
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-  
-          <CardFooter className="flex justify-center space-x-4 pt-4 border-t">
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white px-8"
-            >
-              Accept
-            </Button>
-            <Button
-              variant="outline"
-              className="border-red-600 text-red-600 hover:bg-red-50 px-8"
-            >
-              Decline
-            </Button>
-          </CardFooter>
-        </Card>
+const Termsconditions = ({ onChange }: TermsConditionsProps) => {
+  const [accepted, setAccepted] = useState(false)
+
+  const handleChange = (checked: boolean) => {
+    setAccepted(checked)
+    if (onChange) {
+      onChange(checked)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold text-blue-600 mb-4">Terms and Conditions</h2>
+        <p className="text-slate-600 mb-4">
+          Please read and accept our terms and conditions to complete your registration.
+        </p>
       </div>
-    );
+
+      <ScrollArea className="h-64 rounded-md border p-4">
+        <div className="space-y-4 text-sm text-slate-700">
+          <h3 className="font-medium">1. Introduction</h3>
+          <p>
+            Welcome to PAYME. These Terms and Conditions govern your use of our platform and services. By accessing or
+            using our services, you agree to be bound by these Terms.
+          </p>
+
+          <h3 className="font-medium">2. Definitions</h3>
+          <p>
+            "Service" refers to the PAYME platform and all related services. "User" refers to any individual who
+            accesses or uses our Service. "Agreement" refers to these Terms and Conditions.
+          </p>
+
+          <h3 className="font-medium">3. Account Registration</h3>
+          <p>
+            To use our Service, you must register for an account. You agree to provide accurate, current, and complete
+            information during the registration process and to update such information to keep it accurate, current, and
+            complete.
+          </p>
+
+          <h3 className="font-medium">4. Privacy Policy</h3>
+          <p>
+            Your privacy is important to us. Our Privacy Policy describes how we collect, use, and disclose information
+            about you. By using our Service, you consent to the collection, use, and disclosure of your information as
+            described in our Privacy Policy.
+          </p>
+
+          <h3 className="font-medium">5. User Responsibilities</h3>
+          <p>
+            You are responsible for maintaining the confidentiality of your account credentials and for all activities
+            that occur under your account. You agree to notify us immediately of any unauthorized use of your account or
+            any other breach of security.
+          </p>
+
+          <h3 className="font-medium">6. Service Usage</h3>
+          <p>
+            You agree to use our Service only for lawful purposes and in accordance with these Terms. You agree not to
+            use our Service in any way that could damage, disable, overburden, or impair our Service or interfere with
+            any other party's use of our Service.
+          </p>
+
+          <h3 className="font-medium">7. Termination</h3>
+          <p>
+            We reserve the right to terminate or suspend your account and access to our Service at our sole discretion,
+            without notice, for conduct that we believe violates these Terms or is harmful to other users of our
+            Service, us, or third parties, or for any other reason.
+          </p>
+
+          <h3 className="font-medium">8. Changes to Terms</h3>
+          <p>
+            We reserve the right to modify these Terms at any time. We will provide notice of any material changes to
+            these Terms by posting the updated Terms on our website or through other communications.
+          </p>
+
+          <h3 className="font-medium">9. Contact Information</h3>
+          <p>If you have any questions about these Terms, please contact us at support@payme.com.</p>
+        </div>
+      </ScrollArea>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox id="terms" checked={accepted} onCheckedChange={(checked) => handleChange(checked as boolean)} />
+        <Label
+          htmlFor="terms"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          I have read and agree to the terms and conditions
+        </Label>
+      </div>
+    </div>
+  )
 }
 
 export default Termsconditions

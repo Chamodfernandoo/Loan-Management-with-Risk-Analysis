@@ -3,11 +3,11 @@ import { DataTable } from "@/components/default/data-table"
 import { columns, type Payment } from "@/pages/Lender/invoice/column"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Printer, Plus } from "lucide-react"
+import { Printer} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { ArrowLeft } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 // Sample invoice data
 const invoiceData = {
@@ -202,9 +202,10 @@ export default function MyInvoiceView() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Payment History</h3>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
+                  <Button >
+                    <Link to="/payments/make-payment">
                     Pay online
+                    </Link>
                   </Button>
             </div>
             <DataTable columns={columns} data={payments} />

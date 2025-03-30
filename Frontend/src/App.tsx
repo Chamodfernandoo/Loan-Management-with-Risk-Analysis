@@ -27,6 +27,17 @@ import LenderProfilePage from "./pages/Lender/Profile/page";
 import BorrowerProfilePage from "./pages/Customer/profile-cus/page";
 import BorrowerLoanSummaryPage from "./pages/Customer/Summary/page";
 import IndividualLoanPage from "./pages/Customer/Summary/individual-loan/page";
+import BorrowerSupportPage from "./pages/Customer/Support/page";
+import LenderSupportPage from "./pages/Lender/Support/support";
+import LenderNotificationsPage from "./pages/Lender/Notify/lender_noification";
+import BorrowerNotificationsPage from "./pages/Customer/Notification/noti";
+import AddCardPage from "./pages/Payments/add-card";
+import CardsPage from "./pages/Payments/card";
+import MakePaymentPage from "./pages/Payments/make-paymnet";
+import PaymentHistoryPage from "./pages/Payments/payment-history";
+import RegistrationPage from "./pages/registration/register";
+import Login from "./pages/Login";
+import Welcomepage from "./pages/welcomepage";
 
 
 const App: React.FC = () => {
@@ -35,6 +46,7 @@ const App: React.FC = () => {
      {/* // <Router> */}
 
      <Routes>
+        <Route path="/regiter" element={<RegistrationPage />} />
         <Route path="/register1" element={<Phoneno />} />
         <Route path="/register2" element={<InputOTPForm />} />
         <Route path="/register3" element={<Personalinfo />} />
@@ -44,15 +56,22 @@ const App: React.FC = () => {
         <Route path="/terms" element={<Termsconditions />} />
       </Routes>
 
+      <Routes>
+        <Route path="/login" element={<Login />}/>
+        <Route path="/" element={<Welcomepage/>}/>
+      </Routes>
+
       {/* lender routes */}
       <Routes>
-        <Route path="/" element={<Lender_dashbord/>} />
+        <Route path="/lender" element={<Lender_dashbord/>} />
          <Route path="/view_loan" element={<LoanHistoryPage />} />
           <Route path="/agreement" element={<Agreement />} />
           <Route path="/customer-history" element={<CustomerLoanHistoryPage/>} />
          <Route path="/create_loan" element={<Create_loan />} />
         <Route path="/invoice" element={<InvoiceView />} />
         <Route path="/lender/profile" element={<LenderProfilePage />} />
+        <Route path="/lender/support" element={<LenderSupportPage />} />
+        <Route path="/lender/notifications" element={<LenderNotificationsPage />} />
         
         {/* Ads routes */}
         <Route path="/lender/ads" element={<AdsLayout />}>
@@ -62,16 +81,24 @@ const App: React.FC = () => {
           <Route path=":id" element={<AdDetailPage />} />
         </Route>
 
+         {/* Payment routes */}
+         <Route path="/payments/add-card" element={<AddCardPage />} />
+        <Route path="/payments/cards" element={<CardsPage />} />
+        <Route path="/payments/make-payment" element={<MakePaymentPage />} />
+        <Route path="/payments/payment-history" element={<PaymentHistoryPage />} />
+
       </Routes>
 
     {/* customer routes */}
       <Routes>
-         <Route path="/customer" element={<Customer_dashbord />} />
-          <Route path="/customer/loans" element={<MyLoanHistoryPage />} />
+         <Route path="/borrower" element={<Customer_dashbord />} />
+          <Route path="/borrower/loans" element={<MyLoanHistoryPage />} />
           <Route path="/invoice1" element={<MyInvoiceView />} />
           <Route path="/borrower/profile" element={<BorrowerProfilePage />} />
           <Route path="/borrower/loan-summary" element={<BorrowerLoanSummaryPage />} />
         <Route path="/borrower/loans/:loanId" element={<IndividualLoanPage />} />
+        <Route path="/borrower/support" element={<BorrowerSupportPage />} />
+        <Route path="/borrower/notifications" element={<BorrowerNotificationsPage />} />
           {/* <Route path="/contact" element={<Contact />} /> */}
 
           {/* Borrower Ads routes */}

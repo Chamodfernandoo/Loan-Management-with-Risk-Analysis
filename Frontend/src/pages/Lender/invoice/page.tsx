@@ -137,7 +137,7 @@ export default function InvoiceView() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
       </Button>
-          <CardTitle className="text-2xl font-bold">View Invoice</CardTitle>
+          <CardTitle className="text-2xl font-bold text-blue-600">View Invoice</CardTitle>
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
             Print
@@ -217,7 +217,7 @@ export default function InvoiceView() {
           {/* Payment History */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Payment History</h3>
+              <h3 className="text-lg font-semibold text-blue-700">Payment History</h3>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>

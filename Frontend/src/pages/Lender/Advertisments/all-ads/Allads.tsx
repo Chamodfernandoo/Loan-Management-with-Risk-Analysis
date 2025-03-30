@@ -166,7 +166,7 @@ const AllAdsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="lg:col-span-1 order-1 lg:order-1">
-          <div className="sticky top-20">
+          <div className="sticky top-20 ">
             <AdFilter onFilterChange={setFilter} onViewChange={setViewMode} currentView={viewMode} />
           </div>
         </div>

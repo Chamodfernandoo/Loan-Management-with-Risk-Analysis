@@ -60,7 +60,7 @@ export default function LoanHistoryPage() {
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
       </Button>
-          <CardTitle className="text-2xl font-bold">Order History</CardTitle>
+          <CardTitle className="text-2xl font-bold text-blue-600">Order History</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Search Bar */}

@@ -4,13 +4,18 @@ import * as z from "zod"
 import { CalendarIcon, Eye, EyeOff } from "lucide-react"
 import { format } from "date-fns"
 import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { cn } from "@/lib/utils"
+import { useEffect } from "react"
+import { Button } from "../../../components/ui/button"
+import { Calendar } from "../../../components/ui/calendar"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../../components/ui/form"
+import { Input } from "../../../components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "../../../components/ui/popover"
+import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group"
+import { cn } from "../../../lib/utils"
+
+interface PersonalinfoProps {
+  onDataChange?: (data: any) => void
+}
 
 const formSchema = z
   .object({
@@ -32,7 +37,7 @@ const formSchema = z
     path: ["confirmPassword"],
   })
 
-const Personalinfo = () => {
+const Personalinfo = ({ onDataChange }: PersonalinfoProps) => {
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
@@ -47,20 +52,33 @@ const Personalinfo = () => {
       nicNumber: "",
       gender: "male",
     },
+    mode: "onChange",
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  // Add this to pass data back to the parent when form is valid
+  const formValues = form.watch()
+  const isValid = form.formState.isValid
+
+  useEffect(() => {
+    if (isValid && onDataChange) {
+      onDataChange(formValues)
+    }
+  }, [formValues, isValid, onDataChange])
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    if (onDataChange) {
+      onDataChange(values)
+    }
   }
+
   return (
-    <div className="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
-    <div className="w-full max-w-2xl space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-blue-600">Create an account</h1>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}
@@ -233,10 +251,10 @@ const Personalinfo = () => {
                       onValueChange={field.onChange}
                       className="justify-start"
                     >
-                      <ToggleGroupItem value="male" className="flex-1 data-[state=on]:bg-blue-600">
+                      <ToggleGroupItem value="male" className="flex-1 data-[state=on]:bg-blue-300">
                         Male
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="female" className="flex-1 data-[state=on]:bg-blue-600">
+                      <ToggleGroupItem value="female" className="flex-1 data-[state=on]:bg-blue-300">
                         Female
                       </ToggleGroupItem>
                     </ToggleGroup>
@@ -246,14 +264,9 @@ const Personalinfo = () => {
               )}
             />
           </div>
-
-          <Button type="submit" className="w-full">
-            Create Account
-          </Button>
         </form>
       </Form>
     </div>
-  </div>
   )
 }
 

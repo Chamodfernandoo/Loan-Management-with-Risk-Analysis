@@ -3,10 +3,25 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Camera, X } from "lucide-react"
+import { useEffect } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Button } from "../../../components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../../../components/ui/form"
+import { Input } from "../../../components/ui/input"
+
+// Add this at the top of the file, after the imports
+interface UploadtypeProps {
+  onDataChange?: (data: any) => void
+  docType?: string
+}
 
 const MAX_FILE_SIZE = 5000000 // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
@@ -30,16 +45,42 @@ const formSchema = z.object({
     ),
 })
 
-const Uploadtype = () => {
+// Update the component definition
+const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
   const [frontPreview, setFrontPreview] = React.useState<string | null>(null)
   const [backPreview, setBackPreview] = React.useState<string | null>(null)
   const videoRef = React.useRef<HTMLVideoElement>(null)
   const [isCameraActive, setIsCameraActive] = React.useState(false)
   const [activeInput, setActiveInput] = React.useState<"front" | "back" | null>(null)
+  const [files, setFiles] = React.useState<FileList | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
   })
+
+  // Watch for form changes and notify parent when valid
+  const formValues = form.watch()
+  const isValid = form.formState.isValid
+
+  useEffect(() => {
+    if (isValid && onDataChange) {
+      onDataChange(formValues)
+    }
+  }, [formValues, isValid, onDataChange])
+
+  // Add this to pass data back to the parent when files are uploaded
+  useEffect(() => {
+    if (files && files.length > 0 && onDataChange) {
+      onDataChange({ files })
+    }
+  }, [files, onDataChange])
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    if (onDataChange) {
+      onDataChange(values)
+    }
+  }
 
   const startCamera = async (side: "front" | "back") => {
     try {
@@ -100,6 +141,7 @@ const Uploadtype = () => {
       } else {
         setBackPreview(url)
       }
+      setFiles(e.target.files)
     }
   }
 
@@ -120,155 +162,157 @@ const Uploadtype = () => {
     }
   }, [frontPreview, backPreview])
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-  }
-
   return (
-    <div className="min-h-screen w-screen p-4 flex items-center justify-center bg-slate-50">
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 lg:w-2/5">
-        <div className=" rounded-lg p-8 w-full bg-card">
-          <h2 className="text-2xl font-bold mb-6">Document Verification</h2>
-          <p className="text-muted-foreground mb-6">Enter your valid document for verification.</p>
+    <div className="space-y-6">
+      <div className="rounded-lg w-full">
+        <h2 className="text-2xl font-bold mb-6 text-blue-600">Document Verification</h2>
+        <p className="text-muted-foreground mb-6">
+          Upload your {docType || "identification document"} for verification.
+        </p>
 
-          <div className="grid gap-6">
-            <FormField
-              control={form.control}
-              name="frontSide"
-              render={({ field: { onChange, value, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Front Side</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <div className="flex flex-col md:flex-row gap-2">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            onChange(e.target.files)
-                            handleFileChange(e, "front")
-                          }}
-                          className="bg-muted md:w-1/2"
-                          {...field}
-                        />
-                        <Button className="md:w-1/2" type="button" variant="outline" onClick={() => startCamera("front")}>
-                          <Camera className="h-4 w-4 mr-2" />
-                          Take Photo
-                        </Button>
-                      </div>
-                      {frontPreview && (
-                        <div className="relative">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className=" top-2 right-2"
-                            onClick={() => clearPreview("front")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                          <img
-                            src={frontPreview || "/placeholder.svg"}
-                            alt="Front side preview"
-                            className="w-3/4 rounded-lg border"
+        <Form {...form}>
+          <form className="space-y-8" onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="grid gap-6">
+              <FormField
+                control={form.control}
+                name="frontSide"
+                render={({ field: { onChange, value, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Front Side</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              onChange(e.target.files)
+                              handleFileChange(e, "front")
+                            }}
+                            className="bg-muted md:w-1/2"
+                            {...field}
                           />
-                          
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="backSide"
-              render={({ field: { onChange, value, ...field } }) => (
-                <FormItem>
-                  <FormLabel>Back Side</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <div className="flex flex-col md:flex-row gap-2">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            onChange(e.target.files)
-                            handleFileChange(e, "back")
-                          }}
-                          className="bg-muted md:w-1/2 "
-                          {...field}
-                        />
-                        <Button className="md:w-1/2" type="button" variant="outline" onClick={() => startCamera("back")}>
-                          <Camera className="h-4 w-4 mr-2" />
-                          Take Photo
-                        </Button>
-                      </div>
-                      {backPreview && (
-                        <div className="relative">
                           <Button
+                            className="md:w-1/2"
                             type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="top-2 right-2"
-                            onClick={() => clearPreview("back")}
+                            variant="outline"
+                            onClick={() => startCamera("front")}
                           >
-                            <X className="h-4 w-4" />
+                            <Camera className="h-4 w-4 mr-2" />
+                            Take Photo
                           </Button>
-                          <img
-                            src={backPreview || "/placeholder.svg"}
-                            alt="Back side preview"
-                            className="max-w-sm rounded-lg border"
-                          />
-                          
                         </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                        {frontPreview && (
+                          <div className="relative">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="top-2 right-2"
+                              onClick={() => clearPreview("front")}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <img
+                              src={frontPreview || "/placeholder.svg"}
+                              alt="Front side preview"
+                              className="w-3/4 rounded-lg border"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {isCameraActive && (
-            <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
-              <div className="fixed inset-x-0 top-1/2 -translate-y-1/2 max-w-lg mx-auto p-6 bg-card rounded-lg shadow-lg">
-                <div className="space-y-4">
-                  <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg border" />
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={stopCamera}>
-                      Cancel
-                    </Button>
-                    <Button type="button" onClick={capturePhoto}>
-                      Capture
-                    </Button>
+              <FormField
+                control={form.control}
+                name="backSide"
+                render={({ field: { onChange, value, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Back Side</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              onChange(e.target.files)
+                              handleFileChange(e, "back")
+                            }}
+                            className="bg-muted md:w-1/2"
+                            {...field}
+                          />
+                          <Button
+                            className="md:w-1/2"
+                            type="button"
+                            variant="outline"
+                            onClick={() => startCamera("back")}
+                          >
+                            <Camera className="h-4 w-4 mr-2" />
+                            Take Photo
+                          </Button>
+                        </div>
+                        {backPreview && (
+                          <div className="relative">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="top-2 right-2"
+                              onClick={() => clearPreview("back")}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                            <img
+                              src={backPreview || "/placeholder.svg"}
+                              alt="Back side preview"
+                              className="max-w-sm rounded-lg border"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {isCameraActive && (
+              <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+                <div className="fixed inset-x-0 top-1/2 -translate-y-1/2 max-w-lg mx-auto p-6 bg-card rounded-lg shadow-lg">
+                  <div className="space-y-4">
+                    <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg border" />
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={stopCamera}>
+                        Cancel
+                      </Button>
+                      <Button type="button" onClick={capturePhoto}>
+                        Capture
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <FormDescription className="mt-4">
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-          <p>Requirements:</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Upload both sides of your document</li>
-            <li>Ensure the document is original and not expired</li>
-            <li>Place documents against a solid-colored background</li>
-          </ul>
-        </div>
-          </FormDescription>
-
-          <Button type="submit" className="mt-6">
-            Submit for Verification
-          </Button>
-        </div>
-      </form>
-    </Form>
+            <FormDescription>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <p>Requirements:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                  <li>Upload both sides of your document</li>
+                  <li>Ensure the document is original and not expired</li>
+                  <li>Place documents against a solid-colored background</li>
+                </ul>
+              </div>
+            </FormDescription>
+          </form>
+        </Form>
+      </div>
     </div>
   )
 }

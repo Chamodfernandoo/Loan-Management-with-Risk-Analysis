@@ -60,7 +60,7 @@ const Payament_popup = ({ onSubmitPayment }: PaymentPopupProps) => {
     <div className="px-4 py-6 max-w-xl">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Pay now</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-blue-600">Pay now</CardTitle>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
