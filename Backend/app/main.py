@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.database import connect_to_mongo, close_mongo_connection
 from .core.config import settings
-from .routers import auth, borrowers, loans, risk_analysis
+from .routers import auth, borrowers, loans
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -33,7 +33,6 @@ async def shutdown_db_client():
 app.include_router(auth.router)
 app.include_router(borrowers.router)
 app.include_router(loans.router)
-app.include_router(risk_analysis.router)
 
 @app.get("/")
 async def root():
