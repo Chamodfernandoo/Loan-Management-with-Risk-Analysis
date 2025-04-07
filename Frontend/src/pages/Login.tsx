@@ -37,7 +37,7 @@ const Login = () => {
                 
               </div>
               <div className="pt-4 md:pt-10">
-                <img src="/src/assets/lopic.png" alt="dashbord" className="rounded-2xl w-full h-[300px] md-h-[400px] lg:h-[550px] object-cover"></img>
+                <img src="/src/assets/lopic.png" alt="dashbord" className="rounded-2xl w-full h-[300px] md:h-[350px] lg:h-[450px] object-cover"></img>
               </div>
             </div>
           </div>
