@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+// Removed the import for Metadata as it's specific to Next.js
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Overview } from "@/components/admin/overviwe"
 import { UserManagement } from "@/components/admin/user-manegement"
@@ -7,10 +7,16 @@ import { SystemSettings } from "@/components/admin/system-setting"
 import { DashboardHeader } from "@/components/admin/dashbord-header"
 import { DashboardShell } from "@/components/admin/dashbord-shell"
 
+// Define the Metadata type
+type Metadata = {
+  title: string;
+  description: string;
+};
+
 export const metadata: Metadata = {
   title: "Admin Dashboard",
   description: "Admin dashboard for loan management system",
-}
+};
 
 export default function AdminDashboardPage() {
   return (

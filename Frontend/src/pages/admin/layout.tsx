@@ -1,6 +1,10 @@
 import type React from "react"
-import type { Metadata } from "next"
 import { AdminSidebar } from "@/components/admin/sidebar"
+
+interface Metadata {
+  title: string
+  description: string
+}
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
