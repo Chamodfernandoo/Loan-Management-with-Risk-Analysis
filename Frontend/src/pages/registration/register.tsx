@@ -17,24 +17,28 @@ import Termsconditions from "../Terms&conditions"
 import LenderPersonalinfo from "./lender/info"
 
 // Define types for step data
-interface StepData {
-  userType?: "lender" | "customer"
-  phoneNumber?: string
-  accepted?: boolean
-  documentType?: string
-  [key: string]: any // Allow other properties as well
+interface PhoneStepData {
+  userType: "lender" | "customer"
+  phoneNumber: string
+  [key: string]: any
 }
+
+interface StepData {
+  [key: string]: any
+}
+
 export default function RegistrationPage() {
   const [activeStep, setActiveStep] = useState(0)
   const [userType, setUserType] = useState<"lender" | "customer" | null>(null)
+
   interface FormDataType {
-    phone: { phoneNumber?: string } & Record<string, any>;
-    otp: Record<string, any>;
-    personal: Record<string, any>;
-    address: Record<string, any>;
-    docType: { documentType?: string } & Record<string, any>;
-    upload: Record<string, any>;
-    termsAccepted: boolean;
+    phone: { phoneNumber?: string; userType?: "lender" | "customer" } & Record<string, any>
+    otp: Record<string, any>
+    personal: Record<string, any>
+    address: Record<string, any>
+    docType: { documentType?: string } & Record<string, any>
+    upload: Record<string, any>
+    termsAccepted: boolean
   }
 
   const [formData, setFormData] = useState<FormDataType>({
@@ -50,8 +54,8 @@ export default function RegistrationPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const navigate = useNavigate()
 
-  // Current step data
-  const [currentStepData, setCurrentStepData] = useState<StepData | null>(null)
+  // Current step data with proper typing
+  const [currentStepData, setCurrentStepData] = useState<PhoneStepData | StepData | null>(null)
 
   // Update form data when current step data changes
   useEffect(() => {
@@ -62,8 +66,8 @@ export default function RegistrationPage() {
         case 0:
           newFormData.phone = currentStepData
           // Set user type based on selection
-          if (currentStepData.userType) {
-            setUserType(currentStepData.userType)
+          if ("userType" in currentStepData) {
+            setUserType(currentStepData.userType as "lender" | "customer")
           }
           break
         case 1:
@@ -79,7 +83,8 @@ export default function RegistrationPage() {
           if (userType === "customer") {
             newFormData.docType = currentStepData
           } else {
-            newFormData.termsAccepted = !!currentStepData.accepted
+            // For lender terms acceptance
+            newFormData.termsAccepted = currentStepData?.accepted || false
           }
           break
         case 5:
@@ -89,7 +94,8 @@ export default function RegistrationPage() {
           break
         case 6:
           if (userType === "customer") {
-            newFormData.termsAccepted = !!currentStepData.accepted
+            // For customer terms acceptance
+            newFormData.termsAccepted = currentStepData?.accepted || false
           }
           break
       }
@@ -131,6 +137,11 @@ export default function RegistrationPage() {
     setCurrentStepData(data)
   }
 
+  // Handle terms and conditions change specifically
+  const handleTermsChange = (accepted: boolean) => {
+    setCurrentStepData({ accepted })
+  }
+
   // Determine if the next button should be disabled
   const isLastStep = userType === "lender" ? activeStep === 4 : activeStep === 6
   const nextButtonDisabled = isNextDisabled || (isLastStep && !formData.termsAccepted)
@@ -155,7 +166,7 @@ export default function RegistrationPage() {
         // For lender, show terms and conditions
         // For customer, show document type selection
         return userType === "lender" ? (
-          <Termsconditions onChange={handleDataChange} />
+          <Termsconditions onChange={handleTermsChange} />
         ) : (
           <Doctype onDataChange={handleDataChange} />
         )
@@ -164,13 +175,13 @@ export default function RegistrationPage() {
         return <Uploadtype onDataChange={handleDataChange} docType={formData.docType?.documentType} />
       case 6:
         // Only for customer
-        return <Termsconditions onChange={handleDataChange} />
+        return <Termsconditions onChange={handleTermsChange} />
       default:
         return null
     }
   }
-   // Get steps based on user type
-   const getSteps = () => {
+  // Get steps based on user type
+  const getSteps = () => {
     if (userType === "lender") {
       return [{ title: "Phone" }, { title: "OTP" }, { title: "Personal" }, { title: "Address" }, { title: "Terms" }]
     } else {
