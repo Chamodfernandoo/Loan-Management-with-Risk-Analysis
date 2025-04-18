@@ -1,5 +1,4 @@
 import React from "react"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Stepper, StepperItem, StepperIndicator, StepperTitle, StepperSeparator } from "../../components/ui/stepper"
@@ -15,17 +14,31 @@ import Addressinfo from "./account/addressinfo"
 import Doctype from "./documents/doctype"
 import Uploadtype from "./documents/uploadtype"
 import Termsconditions from "../Terms&conditions"
+import LenderPersonalinfo from "./lender/info"
+
+// Define types for step data
+interface PhoneStepData {
+  userType: "lender" | "customer"
+  phoneNumber: string
+  [key: string]: any
+}
+
+interface StepData {
+  [key: string]: any
+}
 
 export default function RegistrationPage() {
   const [activeStep, setActiveStep] = useState(0)
+  const [userType, setUserType] = useState<"lender" | "customer" | null>(null)
+
   interface FormDataType {
-    phone: { phoneNumber?: string } & Record<string, any>;
-    otp: Record<string, any>;
-    personal: Record<string, any>;
-    address: Record<string, any>;
-    docType: { documentType?: string } & Record<string, any>;
-    upload: Record<string, any>;
-    termsAccepted: boolean;
+    phone: { phoneNumber?: string; userType?: "lender" | "customer" } & Record<string, any>
+    otp: Record<string, any>
+    personal: Record<string, any>
+    address: Record<string, any>
+    docType: { documentType?: string } & Record<string, any>
+    upload: Record<string, any>
+    termsAccepted: boolean
   }
 
   const [formData, setFormData] = useState<FormDataType>({
@@ -41,8 +54,8 @@ export default function RegistrationPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const navigate = useNavigate()
 
-  // Current step data
-  const [currentStepData, setCurrentStepData] = useState(null)
+  // Current step data with proper typing
+  const [currentStepData, setCurrentStepData] = useState<PhoneStepData | StepData | null>(null)
 
   // Update form data when current step data changes
   useEffect(() => {
@@ -52,6 +65,10 @@ export default function RegistrationPage() {
       switch (activeStep) {
         case 0:
           newFormData.phone = currentStepData
+          // Set user type based on selection
+          if ("userType" in currentStepData) {
+            setUserType(currentStepData.userType as "lender" | "customer")
+          }
           break
         case 1:
           newFormData.otp = currentStepData
@@ -63,20 +80,30 @@ export default function RegistrationPage() {
           newFormData.address = currentStepData
           break
         case 4:
-          newFormData.docType = currentStepData
+          if (userType === "customer") {
+            newFormData.docType = currentStepData
+          } else {
+            // For lender terms acceptance
+            newFormData.termsAccepted = currentStepData?.accepted || false
+          }
           break
         case 5:
-          newFormData.upload = currentStepData
+          if (userType === "customer") {
+            newFormData.upload = currentStepData
+          }
           break
         case 6:
-          newFormData.termsAccepted = currentStepData
+          if (userType === "customer") {
+            // For customer terms acceptance
+            newFormData.termsAccepted = currentStepData?.accepted || false
+          }
           break
       }
 
       setFormData(newFormData)
       setIsNextDisabled(false)
     }
-  }, [currentStepData, activeStep])
+  }, [currentStepData, activeStep, userType])
 
   // Reset current step data when active step changes
   useEffect(() => {
@@ -85,7 +112,9 @@ export default function RegistrationPage() {
   }, [activeStep])
 
   const handleNext = () => {
-    if (activeStep < 6) {
+    const maxStep = userType === "lender" ? 4 : 6
+
+    if (activeStep < maxStep) {
       setActiveStep(activeStep + 1)
     } else {
       // On final step submission
@@ -108,8 +137,13 @@ export default function RegistrationPage() {
     setCurrentStepData(data)
   }
 
+  // Handle terms and conditions change specifically
+  const handleTermsChange = (accepted: boolean) => {
+    setCurrentStepData({ accepted })
+  }
+
   // Determine if the next button should be disabled
-  const isLastStep = activeStep === 6
+  const isLastStep = userType === "lender" ? activeStep === 4 : activeStep === 6
   const nextButtonDisabled = isNextDisabled || (isLastStep && !formData.termsAccepted)
 
   // Render the current step component
@@ -120,33 +154,54 @@ export default function RegistrationPage() {
       case 1:
         return <InputOTPForm onDataChange={handleDataChange} phoneNumber={formData.phone?.phoneNumber} />
       case 2:
-        return <Personalinfo onDataChange={handleDataChange} />
+        // Use different personal info form based on user type
+        return userType === "lender" ? (
+          <LenderPersonalinfo onDataChange={handleDataChange} />
+        ) : (
+          <Personalinfo onDataChange={handleDataChange} />
+        )
       case 3:
         return <Addressinfo onDataChange={handleDataChange} />
       case 4:
-        return <Doctype onDataChange={handleDataChange} />
+        // For lender, show terms and conditions
+        // For customer, show document type selection
+        return userType === "lender" ? (
+          <Termsconditions onChange={handleTermsChange} />
+        ) : (
+          <Doctype onDataChange={handleDataChange} />
+        )
       case 5:
+        // Only for customer
         return <Uploadtype onDataChange={handleDataChange} docType={formData.docType?.documentType} />
       case 6:
-        return <Termsconditions onChange={handleDataChange} />
+        // Only for customer
+        return <Termsconditions onChange={handleTermsChange} />
       default:
         return null
     }
   }
+  // Get steps based on user type
+  const getSteps = () => {
+    if (userType === "lender") {
+      return [{ title: "Phone" }, { title: "OTP" }, { title: "Personal" }, { title: "Address" }, { title: "Terms" }]
+    } else {
+      return [
+        { title: "Phone" },
+        { title: "OTP" },
+        { title: "Personal" },
+        { title: "Address" },
+        { title: "Document" },
+        { title: "Upload" },
+        { title: "Terms" },
+      ]
+    }
+  }
 
-  const steps = [
-    { title: "Phone" },
-    { title: "OTP" },
-    { title: "Personal" },
-    { title: "Address" },
-    { title: "Document" },
-    { title: "Upload" },
-    { title: "Terms" },
-  ]
+  const steps = getSteps()
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-8 bg-background min-h-screen">
-      <h1 className="text-2xl font-bold text-center text-blue-700">Registration</h1>
+      <h1 className="text-2xl font-bold text-center">Registration</h1>
 
       {showSuccess && (
         <Alert className="bg-green-50 border-green-200">
@@ -183,7 +238,7 @@ export default function RegistrationPage() {
             </Button>
           )}
 
-          <Button className="ml-auto" onClick={handleNext} >
+          <Button className="ml-auto" onClick={handleNext} disabled={nextButtonDisabled}>
             {isLastStep ? "Submit" : "Next"}
           </Button>
         </div>
