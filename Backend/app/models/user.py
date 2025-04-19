@@ -32,3 +32,23 @@ class User(UserBase):
     
     class Config:
         orm_mode = True
+
+
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    address: Optional[Dict[str, str]] = None
+    business_details: Optional[Dict[str, str]] = None
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+    @validator('confirm_password')
+    def passwords_match(cls, v, values, **kwargs):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError('Passwords do not match')
+        return v
