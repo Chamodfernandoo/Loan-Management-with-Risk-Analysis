@@ -5,6 +5,7 @@ from .core.database import connect_to_mongo, close_mongo_connection
 from .core.config import settings
 from .routers import advertisement, auth, borrowers, cards, loans, notifications, support
 from .routers import payments, users
+from .routers import risk_analysis
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -40,6 +41,7 @@ app.include_router(cards.router)
 app.include_router(notifications.router)
 app.include_router(support.router)
 app.include_router(users.router)
+app.include_router(risk_analysis.router)
 
 @app.get("/")
 async def root():
