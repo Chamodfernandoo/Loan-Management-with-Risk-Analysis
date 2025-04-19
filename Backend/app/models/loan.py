@@ -25,6 +25,14 @@ class Payment(BaseModel):
     payment_method: Optional[str] = None
     transaction_id: Optional[str] = None
 
+class PaymentCreate(BaseModel):
+    loan_id: str
+    amount: float
+    due_date: datetime
+    payment_method: Optional[str] = None
+    transaction_id: Optional[str] = None
+    status: PaymentStatus = PaymentStatus.PENDING
+
 class Loan(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     borrower_id: str

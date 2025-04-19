@@ -5,8 +5,7 @@ from datetime import datetime
 
 from ..core.auth import get_current_active_user
 from ..core.database import get_collection
-from ..models.loan import Loan, LoanStatus, Payment, PaymentStatus
-
+from ..models.loan import Loan, LoanStatus, Payment, PaymentStatus, PaymentCreate
 router = APIRouter(
     prefix="/loans",
     tags=["loans"],
@@ -103,34 +102,38 @@ async def update_loan_status(
             detail="Not authorized to update this loan"
         )
     
-    await loans_collection.update_one(
-        {"_id": ObjectId(loan_id)},
-        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
-    )
+        await loans_collection.update_one(
+            {"_id": ObjectId(loan_id)},
+            {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+        )
+        
+        updated_loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
+        return updated_loan
+    
     @router.get("/borrower/{borrower_id}", response_model=List[Loan])
     async def get_borrower_loans(
-    borrower_id: str,
-    status: Optional[LoanStatus] = None,
-    current_user = Depends(get_current_active_user)
+        borrower_id: str,
+        status: Optional[LoanStatus] = None,
+        current_user = Depends(get_current_active_user)
     ):
         """Get all loans for a specific borrower"""
         loans_collection = get_collection("loans")
-    
-    # Verify authorization
-    if current_user["role"] == "borrower" and str(current_user["_id"]) != borrower_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own loans"
-        )
-    
-    query = {"borrower_id": borrower_id}
-    if status:
-        query["status"] = status
-    
-    cursor = loans_collection.find(query)
-    loans = await cursor.to_list(length=100)
-    
-    return loans
+        
+        # Verify authorization
+        if current_user["role"] == "borrower" and str(current_user["_id"]) != borrower_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view your own loans"
+            )
+        
+        query = {"borrower_id": borrower_id}
+        if status:
+            query["status"] = status
+        
+        cursor = loans_collection.find(query)
+        loans = await cursor.to_list(length=100)
+        
+        return loans
 
 @router.get("/lender/{lender_id}", response_model=List[Loan])
 async def get_lender_loans(
