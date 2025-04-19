@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/me")
 async def get_current_user_profile(current_user = Depends(get_current_active_user)):
-    # Remove sensitive information
+    # Remove sensitive informatio
     current_user.pop("hashed_password", None)
     return current_user
 
