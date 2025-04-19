@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta
+from datetime import timedelta, datetime
 from bson import ObjectId
 
 from ..core.auth import create_access_token, get_password_hash, verify_password
@@ -47,10 +47,23 @@ async def register_user(user_data: UserCreate):
     user_dict = user_data.dict()
     user_dict.pop("password")
     user_dict["hashed_password"] = hashed_password
+    user_dict["is_active"] = True
+    user_dict["created_at"] = datetime.utcnow()
+    user_dict["updated_at"] = datetime.utcnow()
     
     result = await users_collection.insert_one(user_dict)
     
     created_user = await users_collection.find_one({"_id": result.inserted_id})
     created_user["id"] = str(created_user["_id"])
     
-    return created_user
+   # Transform the MongoDB document into the User model
+    return User(
+        id=str(created_user["_id"]),
+        email=created_user["email"],
+        phone_number=created_user["phone_number"],
+        full_name=created_user["full_name"],
+        role=created_user["role"],
+        is_active=created_user["is_active"],
+        created_at=created_user["created_at"],
+        updated_at=created_user["updated_at"],
+    )
