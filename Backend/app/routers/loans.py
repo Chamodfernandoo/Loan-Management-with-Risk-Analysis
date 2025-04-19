@@ -107,6 +107,137 @@ async def update_loan_status(
         {"_id": ObjectId(loan_id)},
         {"$set": {"status": status, "updated_at": datetime.utcnow()}}
     )
+    @router.get("/borrower/{borrower_id}", response_model=List[Loan])
+    async def get_borrower_loans(
+    borrower_id: str,
+    status: Optional[LoanStatus] = None,
+    current_user = Depends(get_current_active_user)
+    ):
+        """Get all loans for a specific borrower"""
+        loans_collection = get_collection("loans")
+    
+    # Verify authorization
+    if current_user["role"] == "borrower" and str(current_user["_id"]) != borrower_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view your own loans"
+        )
+    
+    query = {"borrower_id": borrower_id}
+    if status:
+        query["status"] = status
+    
+    cursor = loans_collection.find(query)
+    loans = await cursor.to_list(length=100)
+    
+    return loans
+
+@router.get("/lender/{lender_id}", response_model=List[Loan])
+async def get_lender_loans(
+    lender_id: str,
+    status: Optional[LoanStatus] = None,
+    current_user = Depends(get_current_active_user)
+):
+    """Get all loans issued by a specific lender"""
+    loans_collection = get_collection("loans")
+    
+    # Verify authorization
+    if current_user["role"] == "lender" and str(current_user["_id"]) != lender_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view loans you've issued"
+        )
+    
+    query = {"lender_id": lender_id}
+    if status:
+        query["status"] = status
+    
+    cursor = loans_collection.find(query)
+    loans = await cursor.to_list(length=100)
+    
+    return loans
+
+@router.post("/{loan_id}/payments", response_model=Payment)
+async def add_loan_payment(
+    loan_id: str,
+    payment: PaymentCreate,
+    current_user = Depends(get_current_active_user)
+):
+    """Add a payment to a specific loan"""
+    loans_collection = get_collection("loans")
+    payments_collection = get_collection("payments")
+    
+    # Verify the loan exists
+    loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
+    if not loan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Loan not found"
+        )
+    
+    # Verify authorization
+    if current_user["role"] == "borrower" and loan["borrower_id"] != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only make payments for your own loans"
+        )
+    
+    if current_user["role"] == "lender" and loan["lender_id"] != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only process payments for loans you've issued"
+        )
+    
+    # Create the payment
+    payment_dict = payment.dict(exclude_unset=True)
+    payment_dict["loan_id"] = loan_id
+    payment_dict["user_id"] = str(current_user["_id"])
+    payment_dict["status"] = "pending"  # Initial status
+    payment_dict["created_at"] = datetime.utcnow()
+    
+    result = await payments_collection.insert_one(payment_dict)
+    created_payment = await payments_collection.find_one({"_id": result.inserted_id})
+    
+    # Update loan payment status
+    await loans_collection.update_one(
+        {"_id": ObjectId(loan_id)},
+        {"$inc": {"paid_amount": payment.amount}}
+    )
+    
+    return created_payment
+
+@router.get("/{loan_id}/payments", response_model=List[Payment])
+async def get_loan_payments(
+    loan_id: str,
+    current_user = Depends(get_current_active_user)
+):
+    """Get all payments for a specific loan"""
+    loans_collection = get_collection("loans")
+    payments_collection = get_collection("payments")
+    
+    # Verify the loan exists
+    loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
+    if not loan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Loan not found"
+        )
+    
+    # Verify authorization
+    if current_user["role"] == "borrower" and loan["borrower_id"] != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view payments for your own loans"
+        )
+    
+    if current_user["role"] == "lender" and loan["lender_id"] != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view payments for loans you've issued"
+        )
+    
+    cursor = payments_collection.find({"loan_id": loan_id}).sort("created_at", -1)
+    payments = await cursor.to_list(length=100)
     
     updated_loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
-    return updated_loan
+    return updated_loan,payments
