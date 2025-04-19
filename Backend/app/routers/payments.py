@@ -5,7 +5,7 @@ from datetime import datetime
 
 from ..core.auth import get_current_active_user
 from ..core.database import get_collection
-from ..models.payment import Payment, PaymentCreate, PaymentMethod
+from ..models.payments import Payment, PaymentCreate, PaymentMethod
 
 router = APIRouter(
     prefix="/payments",

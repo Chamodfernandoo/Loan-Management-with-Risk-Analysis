@@ -5,7 +5,7 @@ from datetime import datetime
 
 from ..core.auth import get_current_active_user
 from ..core.database import get_collection
-from ..models.support import SupportTicket, SupportTicketCreate, TicketReply
+from ..models.supports import SupportTicket, SupportTicketCreate, TicketReply
 
 router = APIRouter(
     prefix="/support",
