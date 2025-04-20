@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr , validator
-from typing import Optional, List ,Dict 
-from datetime import datetime
+from typing import Optional, List, Dict, Literal
+from datetime import datetime, date
 from enum import Enum
 
 class UserRole(str, Enum):
@@ -14,8 +14,32 @@ class UserBase(BaseModel):
     full_name: str
     role: UserRole
 
-class UserCreate(UserBase):
+class Address(BaseModel):
+    province: str
+    district: str
+    city: str
+    address: str
+    postal_code: str
+
+class UserCreate(BaseModel):
+    email: EmailStr
     password: str
+    phone_number: str
+    full_name: str
+    role: Literal["lender", "borrower"]
+    address: Optional[Address] = None
+    document_uploads: Optional[List[str]] = None
+    nic_number: Optional[str]
+    gender: Optional[str]
+    date_of_birth: Optional[date]
+    marital_status: Optional[str]
+    housing_status: Optional[str]
+    job_title: Optional[str]
+    monthly_income: Optional[float]
+    address: Optional[Address]
+    document_type: Optional[str]
+    document_uploads: Optional[List[str]]  # e.g. file URLs or base64 blobs
+    terms_accepted: bool
     
 class UserInDB(UserBase):
     id: str = Field(..., alias="_id")
@@ -24,14 +48,15 @@ class UserInDB(UserBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-class User(UserBase):
+class User(BaseModel):
     id: str
+    email: EmailStr
+    phone_number: str
+    full_name: str
+    role: Literal["lender", "borrower"]
     is_active: bool
     created_at: datetime
     updated_at: datetime
-    
-    class Config:
-        orm_mode = True
 
 
 class UserUpdate(BaseModel):
