@@ -29,7 +29,6 @@ import BorrowerLoanSummaryPage from "./pages/Customer/Summary/page";
 import IndividualLoanPage from "./pages/Customer/Summary/individual-loan/page";
 import BorrowerSupportPage from "./pages/Customer/Support/page";
 import LenderSupportPage from "./pages/Lender/Support/support";
-import LenderNotificationsPage from "./pages/Lender/Notify/lender_noification";
 import BorrowerNotificationsPage from "./pages/Customer/Notification/noti";
 import AddCardPage from "./pages/Payments/add-card";
 import CardsPage from "./pages/Payments/card";
@@ -43,6 +42,7 @@ import AdminLayout from "./pages/admin/layout";
 import { UserManagement } from "./components/admin/user-manegement";
 import { SupportRequests } from "./components/admin/support-req";
 import { SystemSettings } from "./components/admin/system-setting";
+import RiskProfilePage from "./pages/Lender/risk_profile/page";
 
 
 const App: React.FC = () => {
@@ -92,7 +92,8 @@ const App: React.FC = () => {
         <Route path="/invoice" element={<InvoiceView />} />
         <Route path="/lender/profile" element={<LenderProfilePage />} />
         <Route path="/lender/support" element={<LenderSupportPage />} />
-        <Route path="/lender/notifications" element={<LenderNotificationsPage />} />
+        <Route path="/risk_profile" element={<RiskProfilePage />} />
+        
         
         {/* Ads routes */}
         <Route path="/lender/ads" element={<AdsLayout />}>

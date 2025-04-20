@@ -6,7 +6,7 @@ const Lender_dashbord = () => {
       <ButtonCard icon="" title="Create Loan" href="/create_loan" />
       <ButtonCard icon="" title="View Loan" href="/view_loan" />
       <ButtonCard icon="" title="Customer History" href="/customer-history" />
-      <ButtonCard icon="" title="Analyse Profile" href="/view_loan" />
+      <ButtonCard icon="" title="Analyse Profile" href="/risk_profile" />
       <ButtonCard icon="" title="Advertisements" href="/lender/ads/all-ads" />
       <ButtonCard icon="" title="Support" href="/lender/support" />
       <ButtonCard icon="" title="My Profile" href="/lender/profile" />
