@@ -4,7 +4,6 @@ import Lender_dashbord from "./pages/Lender/lender_dashbord";
 import Customer_dashbord from "./pages/Customer/customer_dashbord";
 import Agreement from "./pages/Agreement";
 import Phoneno from "./pages/registration/phonenumber/phoneno";
-import { InputOTPForm } from "./pages/registration/phonenumber/otp";
 import Personalinfo from "./pages/registration/account/personalinfo";
 import Addressinfo from "./pages/registration/account/addressinfo";
 import Doctype from "./pages/registration/documents/doctype";
@@ -53,7 +52,6 @@ const App: React.FC = () => {
      <Routes>
         <Route path="/regiter" element={<RegistrationPage />} />
         <Route path="/register1" element={<Phoneno />} />
-        <Route path="/register2" element={<InputOTPForm />} />
         <Route path="/register3" element={<Personalinfo />} />
         <Route path="/register4" element={<Addressinfo />} />
         <Route path="/register5" element={<Doctype />} />
