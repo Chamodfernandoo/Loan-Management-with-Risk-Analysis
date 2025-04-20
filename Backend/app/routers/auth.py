@@ -60,6 +60,7 @@ async def register_user(user_data: UserCreate):
     return User(
         id=str(created_user["_id"]),
         email=created_user["email"],
+        
         phone_number=created_user["phone_number"],
         full_name=created_user["full_name"],
         role=created_user["role"],
