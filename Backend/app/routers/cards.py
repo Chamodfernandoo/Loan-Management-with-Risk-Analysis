@@ -22,7 +22,7 @@ async def add_card(card: CardCreate, current_user = Depends(get_current_active_u
     card_dict["user_id"] = str(current_user["_id"])
     card_dict["created_at"] = datetime.utcnow()
     
-    # If this is the first card or is_default is true, 
+    # If this is the first card or is_default is true  jihhdji, 
     # update all existing cards to set is_default to false
     if card.is_default:
         await cards_collection.update_many(
