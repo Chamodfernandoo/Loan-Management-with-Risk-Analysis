@@ -5,7 +5,7 @@ from datetime import datetime
 
 from ..core.auth import get_current_active_user
 from ..core.database import get_collection
-from ..models.advertisement import Advertisement, AdvertisementCreate, AdvertisementUpdate
+from ..models.advertiesment import Advertisement, AdvertisementCreate, AdvertisementUpdate
 
 router = APIRouter(
     prefix="/advertisements",
