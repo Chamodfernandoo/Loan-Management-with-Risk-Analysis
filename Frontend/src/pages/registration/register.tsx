@@ -8,7 +8,6 @@ import { CheckCircle2 } from "lucide-react"
 
 // Import components from your existing file structure
 import Phoneno from "./phonenumber/phoneno"
-import { InputOTPForm } from "./phonenumber/otp"
 import Personalinfo from "./account/personalinfo"
 import Addressinfo from "./account/addressinfo"
 import Doctype from "./documents/doctype"
@@ -33,7 +32,6 @@ export default function RegistrationPage() {
 
   interface FormDataType {
     phone: { phoneNumber?: string; userType?: "lender" | "customer" } & Record<string, any>
-    otp: Record<string, any>
     personal: Record<string, any>
     address: Record<string, any>
     docType: { documentType?: string } & Record<string, any>
@@ -43,7 +41,6 @@ export default function RegistrationPage() {
 
   const [formData, setFormData] = useState<FormDataType>({
     phone: {},
-    otp: {},
     personal: {},
     address: {},
     docType: {},
@@ -71,15 +68,12 @@ export default function RegistrationPage() {
           }
           break
         case 1:
-          newFormData.otp = currentStepData
-          break
-        case 2:
           newFormData.personal = currentStepData
           break
-        case 3:
+        case 2:
           newFormData.address = currentStepData
           break
-        case 4:
+        case 3:
           if (userType === "customer") {
             newFormData.docType = currentStepData
           } else {
@@ -87,12 +81,12 @@ export default function RegistrationPage() {
             newFormData.termsAccepted = currentStepData?.accepted || false
           }
           break
-        case 5:
+        case 4:
           if (userType === "customer") {
             newFormData.upload = currentStepData
           }
           break
-        case 6:
+        case 5:
           if (userType === "customer") {
             // For customer terms acceptance
             newFormData.termsAccepted = currentStepData?.accepted || false
@@ -112,7 +106,7 @@ export default function RegistrationPage() {
   }, [activeStep])
 
   const handleNext = () => {
-    const maxStep = userType === "lender" ? 4 : 6
+    const maxStep = userType === "lender" ? 4 : 5
 
     if (activeStep < maxStep) {
       setActiveStep(activeStep + 1)
@@ -143,7 +137,7 @@ export default function RegistrationPage() {
   }
 
   // Determine if the next button should be disabled
-  const isLastStep = userType === "lender" ? activeStep === 4 : activeStep === 6
+  const isLastStep = userType === "lender" ? activeStep === 4 : activeStep === 5
   const nextButtonDisabled = isNextDisabled || (isLastStep && !formData.termsAccepted)
 
   // Render the current step component
@@ -152,28 +146,26 @@ export default function RegistrationPage() {
       case 0:
         return <Phoneno onDataChange={handleDataChange} />
       case 1:
-        return <InputOTPForm onDataChange={handleDataChange} phoneNumber={formData.phone?.phoneNumber} />
+       // Use different personal info form based on user type
+       return userType === "lender" ? (
+        <LenderPersonalinfo onDataChange={handleDataChange} />
+      ) : (
+        <Personalinfo onDataChange={handleDataChange} />
+      )
       case 2:
-        // Use different personal info form based on user type
-        return userType === "lender" ? (
-          <LenderPersonalinfo onDataChange={handleDataChange} />
-        ) : (
-          <Personalinfo onDataChange={handleDataChange} />
-        )
-      case 3:
         return <Addressinfo onDataChange={handleDataChange} />
-      case 4:
-        // For lender, show terms and conditions
+      case 3:
+       // For lender, show terms and conditions
         // For customer, show document type selection
         return userType === "lender" ? (
           <Termsconditions onChange={handleTermsChange} />
         ) : (
           <Doctype onDataChange={handleDataChange} />
         )
-      case 5:
+      case 4:
         // Only for customer
         return <Uploadtype onDataChange={handleDataChange} docType={formData.docType?.documentType} />
-      case 6:
+      case 5:
         // Only for customer
         return <Termsconditions onChange={handleTermsChange} />
       default:
@@ -183,11 +175,10 @@ export default function RegistrationPage() {
   // Get steps based on user type
   const getSteps = () => {
     if (userType === "lender") {
-      return [{ title: "Phone" }, { title: "OTP" }, { title: "Personal" }, { title: "Address" }, { title: "Terms" }]
+      return [{ title: "Phone" },  { title: "Personal" }, { title: "Address" }, { title: "Terms" }]
     } else {
       return [
         { title: "Phone" },
-        { title: "OTP" },
         { title: "Personal" },
         { title: "Address" },
         { title: "Document" },
