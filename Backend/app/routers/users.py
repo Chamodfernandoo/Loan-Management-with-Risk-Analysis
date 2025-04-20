@@ -13,11 +13,15 @@ router = APIRouter(
     dependencies=[Depends(get_current_active_user)]
 )
 
-@router.get("/me")
+@router.get("/me", response_model=dict)
 async def get_current_user_profile(current_user = Depends(get_current_active_user)):
-    # Remove sensitive informatio
-    current_user.pop("hashed_password", None)
-    return current_user
+     # make a shallow copy so we don’t mutate the Mongo document in place
+    user_doc = dict(current_user)
+    # remove sensitive/internal fields
+    user_doc.pop("hashed_password", None)
+    # convert ObjectId to string
+    user_doc["id"] = str(user_doc.pop("_id"))
+    return user_doc
 
 @router.put("/me", response_model=dict)
 async def update_user_profile(
