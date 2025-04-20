@@ -38,6 +38,11 @@ import PaymentHistoryPage from "./pages/Payments/payment-history";
 import RegistrationPage from "./pages/registration/register";
 import Login from "./pages/Login";
 import Welcomepage from "./pages/welcomepage";
+import AdminDashboardPage from "./pages/admin/Adminpage";
+import AdminLayout from "./pages/admin/layout";
+import { UserManagement } from "./components/admin/user-manegement";
+import { SupportRequests } from "./components/admin/support-req";
+import { SystemSettings } from "./components/admin/system-setting";
 
 
 const App: React.FC = () => {
@@ -61,6 +66,22 @@ const App: React.FC = () => {
         <Route path="/" element={<Welcomepage/>}/>
       </Routes>
 
+      {/* admin routes */}
+      <Routes>
+        <Route
+          path="/admin"
+          element={
+            <AdminLayout>
+              <Routes>
+                <Route index element={<AdminDashboardPage />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="support" element={<SupportRequests />} />
+                <Route path="settings" element={<SystemSettings />} />
+              </Routes>
+            </AdminLayout>
+          }
+        />
+      </Routes>
       {/* lender routes */}
       <Routes>
         <Route path="/lender" element={<Lender_dashbord/>} />

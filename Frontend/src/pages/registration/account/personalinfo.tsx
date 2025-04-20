@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { CalendarIcon, Eye, EyeOff } from "lucide-react"
+import { CalendarIcon, Check, ChevronDown, Eye, EyeOff } from "lucide-react"
 import { format } from "date-fns"
 import * as React from "react"
 import { useEffect } from "react"
@@ -10,8 +10,29 @@ import { Calendar } from "../../../components/ui/calendar"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../../components/ui/form"
 import { Input } from "../../../components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "../../../components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../../../components/ui/command"
 import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group"
 import { cn } from "../../../lib/utils"
+
+const maritalStatus = [
+  { label: "Single", value: "single" },
+  { label: "Married", value: "married" },
+  { label: "Divorced", value: "divorced" },
+]
+
+const housingStatus = [
+  { label: "Own Home", value: "own" },
+  { label: "Renting", value: "renting" },
+  { label: "Living with Family", value: "family" },
+  { label: "Other", value: "other" },
+]
 
 interface PersonalinfoProps {
   onDataChange?: (data: any) => void
@@ -25,12 +46,20 @@ const formSchema = z
     dateOfBirth: z.date({
       required_error: "Please select your date of birth",
     }),
+    maritalStatus: z.string({
+      required_error: "Please select your marital status",
+    }),
+    housingStatus: z.string({
+      required_error: "Please select your housing status",
+    }),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
     nicNumber: z.string().min(1, "NIC number is required"),
     gender: z.enum(["male", "female"], {
       required_error: "Please select your gender",
     }),
+    jobTitle: z.string().min(2, "Job title must be at least 2 characters"),
+    monthlyIncome: z.string().min(1, "Monthly income is required"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -51,11 +80,16 @@ const Personalinfo = ({ onDataChange }: PersonalinfoProps) => {
       confirmPassword: "",
       nicNumber: "",
       gender: "male",
+      jobTitle: "",
+      monthlyIncome: "",
+      maritalStatus: "",
+      housingStatus: "",
+      dateOfBirth: undefined,
     },
     mode: "onChange",
   })
 
-  // Add this to pass data back to the parent when form is valid
+  // Add this to watch form values
   const formValues = form.watch()
   const isValid = form.formState.isValid
 
@@ -248,16 +282,158 @@ const Personalinfo = ({ onDataChange }: PersonalinfoProps) => {
                     <ToggleGroup
                       type="single"
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        if (value) field.onChange(value)
+                      }}
                       className="justify-start"
                     >
-                      <ToggleGroupItem value="male" className="flex-1 data-[state=on]:bg-blue-300">
+                      <ToggleGroupItem value="male" className="flex-1 data-[state=on]:bg-blue-600">
                         Male
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="female" className="flex-1 data-[state=on]:bg-blue-300">
+                      <ToggleGroupItem value="female" className="flex-1 data-[state=on]:bg-blue-600">
                         Female
                       </ToggleGroupItem>
                     </ToggleGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="maritalStatus"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Marital Status</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                        >
+                          {field.value
+                            ? maritalStatus.find((status) => status.value === field.value)?.label
+                            : "Select marital status"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search marital status..." />
+                        <CommandList>
+                          <CommandEmpty>No status found.</CommandEmpty>
+                          <CommandGroup>
+                            {maritalStatus.map((status) => (
+                              <CommandItem
+                                key={status.value}
+                                value={status.value}
+                                onSelect={(value) => {
+                                  field.onChange(value)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    status.value === field.value ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {status.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="housingStatus"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Housing Status</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                        >
+                          {field.value
+                            ? housingStatus.find((status) => status.value === field.value)?.label
+                            : "Select housing status"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search housing status..." />
+                        <CommandList>
+                          <CommandEmpty>No status found.</CommandEmpty>
+                          <CommandGroup>
+                            {housingStatus.map((status) => (
+                              <CommandItem
+                                key={status.value}
+                                value={status.value}
+                                onSelect={(value) => {
+                                  field.onChange(value)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    status.value === field.value ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {status.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="jobTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Job Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter job title" {...field} className="bg-muted" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="monthlyIncome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monthly Income</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter monthly income" {...field} className="bg-muted" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

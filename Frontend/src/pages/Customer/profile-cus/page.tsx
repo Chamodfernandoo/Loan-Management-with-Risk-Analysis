@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import { Eye, EyeOff, LogOut, MapPin, Phone, User, Mail, Edit, Save, X, Shield} from "lucide-react"
+import { Eye, EyeOff, LogOut, MapPin, Phone, User, Mail, Edit, Save, X, Shield, ChevronDown, Check} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -23,6 +23,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Popover, PopoverContent, PopoverTrigger } from "../../../components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "../../../components/ui/command"
+
+const maritalStatus = [
+  { label: "Single", value: "single" },
+  { label: "Married", value: "married" },
+  { label: "Divorced", value: "divorced" },
+]
+
+const housingStatus = [
+  { label: "Own Home", value: "own" },
+  { label: "Renting", value: "rent" },
+  { label: "Living with Family", value: "family" },
+  { label: "Other", value: "other" },
+]
 
 // Sample borrower data
 const borrowerData = {
@@ -33,6 +55,10 @@ const borrowerData = {
   dateOfBirth: new Date("1990-12-29"),
   gender: "male",
   nicNumber: "199029102613",
+  Job: "Software Engineer",
+  income: "50000",
+  maritalStatus: "single",
+  housingStatus: "rent",
   address: {
     province: "Western Province",
     district: "Kegalle",
@@ -61,6 +87,14 @@ const personalInfoSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
+  job: z.string().optional(),
+  income: z.string().optional(),
+  maritalStatus: z.enum(["single", "married", "divorced"], {
+    errorMap: () => ({ message: "Please select a marital status" }),
+  }),
+  housingStatus: z.enum(["own", "rent", "family", "other"], {
+    errorMap: () => ({ message: "Please select a housing status" }),
+  }),
 })
 
 // Form schema for password change
@@ -93,6 +127,10 @@ export default function BorrowerProfilePage() {
       lastName: borrowerData.lastName,
       email: borrowerData.email,
       phoneNumber: borrowerData.phoneNumber,
+      job: borrowerData.Job,
+      income: borrowerData.income,
+      maritalStatus: borrowerData.maritalStatus as "single" | "married" | "divorced",
+      housingStatus: borrowerData.housingStatus as "own" | "rent" | "family" | "other",
     },
   })
 
@@ -129,6 +167,13 @@ export default function BorrowerProfilePage() {
     console.log("Logging out...")
     // Here you would typically clear auth tokens, etc.
     navigate("/customer")
+  }
+
+  function cn(...inputs: (string | boolean | undefined)[]): string {
+    return inputs
+      .filter(Boolean)
+      .join(" ")
+      .trim();
   }
 
   return (
@@ -291,6 +336,144 @@ export default function BorrowerProfilePage() {
                           />
                         </div>
 
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={personalInfoForm.control}
+                            name="job"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Job</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={personalInfoForm.control}
+                            name="income"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Income</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField
+              control={personalInfoForm.control}
+              name="maritalStatus"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Marital Status</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                        >
+                          {field.value
+                            ? maritalStatus.find((status) => status.value === field.value)?.label
+                            : "Select marital status"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search marital status..." />
+                        <CommandList>
+                          <CommandEmpty>No status found.</CommandEmpty>
+                          <CommandGroup>
+                            {maritalStatus.map((status) => (
+                              <CommandItem
+                                key={status.value}
+                                value={status.value}
+                                onSelect={(value) => {
+                                  field.onChange(value)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    status.value === field.value ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {status.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={personalInfoForm.control}
+              name="housingStatus"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Housing Status</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                        >
+                          {field.value
+                            ? housingStatus.find((status) => status.value === field.value)?.label
+                            : "Select housing status"}
+                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search housing status..." />
+                        <CommandList>
+                          <CommandEmpty>No status found.</CommandEmpty>
+                          <CommandGroup>
+                            {housingStatus.map((status) => (
+                              <CommandItem
+                                key={status.value}
+                                value={status.value}
+                                onSelect={(value) => {
+                                  field.onChange(value)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    status.value === field.value ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {status.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+                        </div>
+
                         <div className="flex justify-end">
                           <Button type="submit">
                             <Save className="mr-2 h-4 w-4" />
@@ -301,7 +484,7 @@ export default function BorrowerProfilePage() {
                     </Form>
                   ) : (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">First Name</h3>
                           <p>{borrowerData.firstName}</p>
@@ -314,12 +497,12 @@ export default function BorrowerProfilePage() {
                           <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
                           <p>{borrowerData.email}</p>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Phone Number</h3>
                           <p>{borrowerData.phoneNumber}</p>
                         </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Date of Birth</h3>
                           <p>{format(borrowerData.dateOfBirth, "MMMM dd, yyyy")}</p>
@@ -327,12 +510,28 @@ export default function BorrowerProfilePage() {
                           <h3 className="text-sm font-medium text-muted-foreground">Gender</h3>
                           <p className="capitalize">{borrowerData.gender}</p>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
+                        <div>
                         <h3 className="text-sm font-medium text-muted-foreground">NIC Number</h3>
                         <p>{borrowerData.nicNumber}</p>
                       </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">Job</h3>
+                        <p>{borrowerData.Job}</p>
+                      </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">Income</h3>
+                        <p>{borrowerData.income}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">Marital Status</h3>
+                        <p className="capitalize">{borrowerData.maritalStatus}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">Housing Status</h3>
+                        <p className="capitalize">{borrowerData.housingStatus}</p>
+                        </div>
                       </div>
                     </div>
                   )}
