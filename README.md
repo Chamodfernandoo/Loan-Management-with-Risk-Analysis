@@ -39,3 +39,4 @@ A modern loan management system built with React, TypeScript, and Tailwind CSS. 
 
 3.npm run dev  
 
+# uvicorn app.main:app --reload
