@@ -56,10 +56,10 @@ const LenderPersonalinfo = ({ onDataChange }: LenderPersonalinfoProps) => {
 
   useEffect(() => {
     if (isValid) {
-      onDataChange(formValues)
+      // Use a deep comparison or stringify to prevent unnecessary updates
+      onDataChange({...formValues})
     }
-  }, [formValues, isValid, onDataChange])
-
+  }, [isValid, JSON.stringify(formValues)])
   return (
     <div className="space-y-6">
       <div>

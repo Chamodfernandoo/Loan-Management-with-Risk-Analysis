@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import { Eye, EyeOff, LogOut, MapPin, Phone, User, Mail, Edit, Save, X, Shield, ChevronDown, Check} from "lucide-react"
+import { Eye, EyeOff, LogOut, MapPin, Phone, User, Mail, Edit, Save, X, Shield, ChevronDown, Check, QrCode } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -32,6 +32,39 @@ import {
   CommandItem,
   CommandList,
 } from "../../../components/ui/command"
+import { Spinner } from "@/components/ui/spinner" // You might need to create this component
+import { useAuth } from "@/context/AuthContext"
+import { useToast } from "@/hooks/use-toast"
+import { userService } from "@/services/api"
+import { generateQRCode, generateProfileQrData } from "@/utils/qrCode"
+
+interface ProfileData {
+  id?: string;
+  full_name?: string;
+  email?: string;
+  phone_number?: string;
+  nic_number?: string;
+  gender?: string;
+  date_of_birth?: string;
+  job_title?: string;
+  monthly_income?: number;
+  marital_status?: string;
+  housing_status?: string;
+  address?: {
+    province?: string;
+    district?: string;
+    city?: string;
+    postal_code?: string;
+    address?: string;
+  };
+  document_type?: string;
+  is_verified?: boolean;
+  verified_at?: string;
+  created_at?: string;
+  updated_at?: string;
+  role?: string;
+  [key: string]: any; // For any additional properties
+}
 
 const maritalStatus = [
   { label: "Single", value: "single" },
@@ -46,53 +79,18 @@ const housingStatus = [
   { label: "Other", value: "other" },
 ]
 
-// Sample borrower data
-const borrowerData = {
-  firstName: "Chamod",
-  lastName: "Fernando",
-  email: "chamud@example.com",
-  phoneNumber: "077-3556635",
-  dateOfBirth: new Date("1990-12-29"),
-  gender: "male",
-  nicNumber: "199029102613",
-  Job: "Software Engineer",
-  income: "50000",
-  maritalStatus: "single",
-  housingStatus: "rent",
-  address: {
-    province: "Western Province",
-    district: "Kegalle",
-    city: "Kegalle",
-    address: "Kegalle nethuwall",
-    postalCode: "71000",
-  },
-  documentVerification: {
-    status: "verified",
-    documentType: "id-card",
-    verifiedDate: new Date("2023-01-15"),
-  },
-  joinedDate: new Date("2023-01-05"),
-  profileImage: "/placeholder.svg?height=100&width=100",
-  loanStats: {
-    activeLoans: 1,
-    completedLoans: 2,
-    totalBorrowed: 150000,
-    currentBalance: 50000,
-  },
-}
-
 // Form schema for personal info
 const personalInfoSchema = z.object({
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  first_name: z.string().min(2, "First name must be at least 2 characters"),
+  last_name: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
-  job: z.string().optional(),
-  income: z.string().optional(),
-  maritalStatus: z.enum(["single", "married", "divorced"], {
+  phone_number: z.string().min(10, "Phone number must be at least 10 characters"),
+  job_title: z.string().optional(),
+  monthly_income: z.string().optional(),
+  marital_status: z.enum(["single", "married", "divorced"], {
     errorMap: () => ({ message: "Please select a marital status" }),
   }),
-  housingStatus: z.enum(["own", "rent", "family", "other"], {
+  housing_status: z.enum(["own", "rent", "family", "other"], {
     errorMap: () => ({ message: "Please select a housing status" }),
   }),
 })
@@ -100,17 +98,19 @@ const personalInfoSchema = z.object({
 // Form schema for password change
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(8, "Password must be at least 8 characters"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+    current_password: z.string().min(8, "Password must be at least 8 characters"),
+    new_password: z.string().min(8, "Password must be at least 8 characters"),
+    confirm_password: z.string().min(8, "Password must be at least 8 characters"),
   })
-  .refine((data) => data.newPassword === data.confirmPassword, {
+  .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords do not match",
-    path: ["confirmPassword"],
+    path: ["confirm_password"],
   })
 
 export default function BorrowerProfilePage() {
   const navigate = useNavigate()
+  const { logout } = useAuth()
+  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -118,55 +118,167 @@ export default function BorrowerProfilePage() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false)
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false)
+  const [profileData, setProfileData] = useState<ProfileData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
+  const [showQrDialog, setShowQrDialog] = useState(false)
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true)
+        const data = await userService.getBorrowerProfile()
+        console.log("Profile data fetched:", data)
+        setProfileData(data)
+        
+        // Generate QR code
+        if (data.id && data.full_name && data.phone_number) {
+          const qrData = generateProfileQrData(data.id, data.full_name, data.phone_number)
+          const qrCode = await generateQRCode(qrData)
+          setQrCodeUrl(qrCode)
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load profile data. Please try again.",
+          variant: "destructive"
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [toast])
 
   // Personal info form
   const personalInfoForm = useForm<z.infer<typeof personalInfoSchema>>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
-      firstName: borrowerData.firstName,
-      lastName: borrowerData.lastName,
-      email: borrowerData.email,
-      phoneNumber: borrowerData.phoneNumber,
-      job: borrowerData.Job,
-      income: borrowerData.income,
-      maritalStatus: borrowerData.maritalStatus as "single" | "married" | "divorced",
-      housingStatus: borrowerData.housingStatus as "own" | "rent" | "family" | "other",
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone_number: "",
+      job_title: "",
+      monthly_income: "",
+      marital_status: "single",
+      housing_status: "rent",
     },
   })
+
+  // Update form values when profile data is loaded
+  useEffect(() => {
+    if (profileData) {
+      const nameParts = profileData.full_name?.split(' ') || ['', '']
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+      
+      personalInfoForm.reset({
+        first_name: firstName,
+        last_name: lastName,
+        email: profileData.email || '',
+        phone_number: profileData.phone_number || '',
+        job_title: profileData.job_title || '',
+        monthly_income: profileData.monthly_income?.toString() || '',
+        marital_status: profileData.marital_status as "single" | "married" | "divorced" || "single",
+        housing_status: profileData.housing_status as "own" | "rent" | "family" | "other" || "rent",
+      })
+    }
+  }, [profileData, personalInfoForm])
 
   // Password change form
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+      current_password: "",
+      new_password: "",
+      confirm_password: "",
     },
   })
 
   // Handle personal info form submission
-  function onPersonalInfoSubmit(values: z.infer<typeof personalInfoSchema>) {
-    console.log("Updated personal info:", values)
-    // Here you would typically send the data to your backend
-    setIsEditing(false)
-    setProfileUpdateSuccess(true)
-    setTimeout(() => setProfileUpdateSuccess(false), 3000)
+  async function onPersonalInfoSubmit(values: z.infer<typeof personalInfoSchema>) {
+    try {
+      // Combine first and last name
+      const updateData = {
+        full_name: `${values.first_name} ${values.last_name}`,
+        email: values.email,
+        phone_number: values.phone_number,
+        job_title: values.job_title,
+        monthly_income: values.monthly_income ? parseFloat(values.monthly_income) : undefined,
+        marital_status: values.marital_status,
+        housing_status: values.housing_status,
+      }
+      
+      console.log("Updating profile with:", updateData)
+      await userService.updateBorrowerProfile(updateData)
+      
+      // Update local profile data
+      setProfileData((prev: ProfileData | null) => ({ ...prev, ...updateData }))
+      
+      setIsEditing(false)
+      setProfileUpdateSuccess(true)
+      toast({
+        title: "Success",
+        description: "Your profile has been updated successfully.",
+      })
+      
+      // Regenerate QR code with new data
+      const qrData = generateProfileQrData(
+        profileData?.id || '', 
+        updateData.full_name || '', 
+        updateData.phone_number || ''
+      )
+      const qrCode = await generateQRCode(qrData)
+      setQrCodeUrl(qrCode)
+      
+      setTimeout(() => setProfileUpdateSuccess(false), 3000)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive"
+      })
+    }
   }
 
   // Handle password change form submission
-  function onPasswordSubmit(values: z.infer<typeof passwordSchema>) {
-    console.log("Password change:", values)
-    // Here you would typically send the data to your backend
-    passwordForm.reset()
-    setPasswordChangeSuccess(true)
-    setTimeout(() => setPasswordChangeSuccess(false), 3000)
+  async function onPasswordSubmit(values: z.infer<typeof passwordSchema>) {
+    try {
+      await userService.changePassword({
+        current_password: values.current_password,
+        new_password: values.new_password,
+        confirm_password: values.confirm_password,
+      })
+      
+      passwordForm.reset()
+      setPasswordChangeSuccess(true)
+      toast({
+        title: "Success",
+        description: "Your password has been changed successfully.",
+      })
+      setTimeout(() => setPasswordChangeSuccess(false), 3000)
+    } catch (error) {
+      console.error("Error changing password:", error)
+      toast({
+        title: "Error",
+        description: "Failed to change password. Please ensure your current password is correct.",
+        variant: "destructive"
+      })
+    }
   }
 
   // Handle logout
   function handleLogout() {
-    console.log("Logging out...")
-    // Here you would typically clear auth tokens, etc.
-    navigate("/customer")
+    logout()
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    })
+    navigate("/login")
   }
 
   function cn(...inputs: (string | boolean | undefined)[]): string {
@@ -176,15 +288,36 @@ export default function BorrowerProfilePage() {
       .trim();
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="mb-4">Loading profile data...</div>
+          {/* Add your spinner component here */}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen">
     <div className="container py-8 px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold">My Profile</h1>
-        <Button variant="destructive" onClick={() => setLogoutDialogOpen(true)} className="sm:self-end">
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowQrDialog(true)}
+            className="flex items-center gap-2"
+          >
+            <QrCode className="h-4 w-4" />
+            My QR Code
+          </Button>
+          <Button variant="destructive" onClick={() => setLogoutDialogOpen(true)} className="sm:self-end">
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       {profileUpdateSuccess && (
@@ -202,17 +335,17 @@ export default function BorrowerProfilePage() {
             <div className="flex flex-col items-center">
               <Avatar className="h-24 w-24 mb-4">
                 <AvatarImage
-                  src={borrowerData.profileImage}
-                  alt={`${borrowerData.firstName} ${borrowerData.lastName}`}
+                  src="/placeholder.svg?height=100&width=100"
+                  alt={profileData?.full_name || "User"}
                 />
                 <AvatarFallback>
                   <User className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="text-xl text-center">
-                {borrowerData.firstName} {borrowerData.lastName}
+                {profileData?.full_name || "User"}
               </CardTitle>
-              <CardDescription className="text-center">{borrowerData.nicNumber}</CardDescription>
+              <CardDescription className="text-center">{profileData?.nic_number || "NIC Not Available"}</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="pb-2">
@@ -220,26 +353,26 @@ export default function BorrowerProfilePage() {
               <div className="flex items-center">
                 <Badge className="bg-purple-600 hover:bg-purple-700">Borrower</Badge>
                 <Badge className="ml-2 bg-blue-600 hover:bg-blue-700">
-                  {borrowerData.documentVerification.status === "verified" ? "Verified" : "Unverified"}
+                  {profileData?.is_verified ? "Verified" : "Unverified"}
                 </Badge>
               </div>
               <div className="flex items-center text-sm">
                 <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{borrowerData.phoneNumber}</span>
+                <span>{profileData?.phone_number || "No phone number"}</span>
               </div>
               <div className="flex items-center text-sm">
                 <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{borrowerData.email}</span>
+                <span>{profileData?.email || "No email"}</span>
               </div>
               <div className="flex items-center text-sm">
                 <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
                 <span>
-                  {borrowerData.address.city}, {borrowerData.address.district}
+                  {profileData?.address?.city}, {profileData?.address?.district}
                 </span>
               </div>
               <Separator />
               <div className="text-sm text-muted-foreground">
-                Member since {format(borrowerData.joinedDate, "MMMM yyyy")}
+                Member since {profileData?.created_at ? format(new Date(profileData.created_at), "MMMM yyyy") : "N/A"}
               </div>
             </div>
           </CardContent>
@@ -281,7 +414,7 @@ export default function BorrowerProfilePage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
                             control={personalInfoForm.control}
-                            name="firstName"
+                            name="first_name"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>First Name</FormLabel>
@@ -294,7 +427,7 @@ export default function BorrowerProfilePage() {
                           />
                           <FormField
                             control={personalInfoForm.control}
-                            name="lastName"
+                            name="last_name"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Last Name</FormLabel>
@@ -323,7 +456,7 @@ export default function BorrowerProfilePage() {
                           />
                           <FormField
                             control={personalInfoForm.control}
-                            name="phoneNumber"
+                            name="phone_number"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Phone Number</FormLabel>
@@ -339,7 +472,7 @@ export default function BorrowerProfilePage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
                             control={personalInfoForm.control}
-                            name="job"
+                            name="job_title"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Job</FormLabel>
@@ -352,7 +485,7 @@ export default function BorrowerProfilePage() {
                           />
                           <FormField
                             control={personalInfoForm.control}
-                            name="income"
+                            name="monthly_income"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Income</FormLabel>
@@ -366,112 +499,111 @@ export default function BorrowerProfilePage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <FormField
-              control={personalInfoForm.control}
-              name="maritalStatus"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Marital Status</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
-                        >
-                          {field.value
-                            ? maritalStatus.find((status) => status.value === field.value)?.label
-                            : "Select marital status"}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search marital status..." />
-                        <CommandList>
-                          <CommandEmpty>No status found.</CommandEmpty>
-                          <CommandGroup>
-                            {maritalStatus.map((status) => (
-                              <CommandItem
-                                key={status.value}
-                                value={status.value}
-                                onSelect={(value) => {
-                                  field.onChange(value)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    status.value === field.value ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {status.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={personalInfoForm.control}
-              name="housingStatus"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Housing Status</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
-                        >
-                          {field.value
-                            ? housingStatus.find((status) => status.value === field.value)?.label
-                            : "Select housing status"}
-                          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput placeholder="Search housing status..." />
-                        <CommandList>
-                          <CommandEmpty>No status found.</CommandEmpty>
-                          <CommandGroup>
-                            {housingStatus.map((status) => (
-                              <CommandItem
-                                key={status.value}
-                                value={status.value}
-                                onSelect={(value) => {
-                                  field.onChange(value)
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    status.value === field.value ? "opacity-100" : "opacity-0",
-                                  )}
-                                />
-                                {status.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                          control={personalInfoForm.control}
+                          name="marital_status"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Marital Status</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                                    >
+                                      {field.value
+                                        ? maritalStatus.find((status) => status.value === field.value)?.label
+                                        : "Select marital status"}
+                                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Search marital status..." />
+                                    <CommandList>
+                                      <CommandEmpty>No status found.</CommandEmpty>
+                                      <CommandGroup>
+                                        {maritalStatus.map((status) => (
+                                          <CommandItem
+                                            key={status.value}
+                                            value={status.value}
+                                            onSelect={(value) => {
+                                              field.onChange(value)
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                status.value === field.value ? "opacity-100" : "opacity-0",
+                                              )}
+                                            />
+                                            {status.label}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={personalInfoForm.control}
+                          name="housing_status"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Housing Status</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      role="combobox"
+                                      className={cn("w-full justify-between bg-muted", !field.value && "text-muted-foreground")}
+                                    >
+                                      {field.value
+                                        ? housingStatus.find((status) => status.value === field.value)?.label
+                                        : "Select housing status"}
+                                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Search housing status..." />
+                                    <CommandList>
+                                      <CommandEmpty>No status found.</CommandEmpty>
+                                      <CommandGroup>
+                                        {housingStatus.map((status) => (
+                                          <CommandItem
+                                            key={status.value}
+                                            value={status.value}
+                                            onSelect={(value) => {
+                                              field.onChange(value)
+                                            }}
+                                          >
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                status.value === field.value ? "opacity-100" : "opacity-0",
+                                              )}
+                                            />
+                                            {status.label}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         </div>
 
                         <div className="flex justify-end">
@@ -487,50 +619,51 @@ export default function BorrowerProfilePage() {
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">First Name</h3>
-                          <p>{borrowerData.firstName}</p>
+                          <p>{profileData?.full_name?.split(' ')[0] || "N/A"}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Last Name</h3>
-                          <p>{borrowerData.lastName}</p>
+                          <p>{profileData?.full_name?.split(' ').slice(1).join(' ') || "N/A"}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                          <p>{borrowerData.email}</p>
+                          <p>{profileData?.email || "N/A"}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Phone Number</h3>
-                          <p>{borrowerData.phoneNumber}</p>
+                          <p>{profileData?.phone_number || "N/A"}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Date of Birth</h3>
-                          <p>{format(borrowerData.dateOfBirth, "MMMM dd, yyyy")}</p>
-                        </div> <div>
+                          <p>{profileData?.date_of_birth ? format(new Date(profileData.date_of_birth), "MMMM dd, yyyy") : "N/A"}</p>
+                        </div> 
+                        <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Gender</h3>
-                          <p className="capitalize">{borrowerData.gender}</p>
+                          <p className="capitalize">{profileData?.gender || "N/A"}</p>
                         </div>
                         <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">NIC Number</h3>
-                        <p>{borrowerData.nicNumber}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Job</h3>
-                        <p>{borrowerData.Job}</p>
-                      </div>
+                          <h3 className="text-sm font-medium text-muted-foreground">NIC Number</h3>
+                          <p>{profileData?.nic_number || "N/A"}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Job</h3>
+                          <p>{profileData?.job_title || "N/A"}</p>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Income</h3>
-                        <p>{borrowerData.income}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Marital Status</h3>
-                        <p className="capitalize">{borrowerData.maritalStatus}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Housing Status</h3>
-                        <p className="capitalize">{borrowerData.housingStatus}</p>
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Income</h3>
+                          <p>{profileData?.monthly_income || "N/A"}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Marital Status</h3>
+                          <p className="capitalize">{profileData?.marital_status || "N/A"}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Housing Status</h3>
+                          <p className="capitalize">{profileData?.housing_status || "N/A"}</p>
                         </div>
                       </div>
                     </div>
@@ -547,32 +680,31 @@ export default function BorrowerProfilePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Province</h3>
-                        <p>{borrowerData.address.province}</p>
+                        <p>{profileData?.address?.province || "N/A"}</p>
                       </div>
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">District</h3>
-                        <p>{borrowerData.address.district}</p>
+                        <p>{profileData?.address?.district || "N/A"}</p>
                       </div>
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">City</h3>
-                        <p>{borrowerData.address.city}</p>
+                        <p>{profileData?.address?.city || "N/A"}</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                     
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Postal Code</h3>
-                        <p>{borrowerData.address.postalCode}</p>
+                        <p>{profileData?.address?.postal_code || "N/A"}</p>
                       </div>
                       <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
-                      <p>{borrowerData.address.address}</p>
-                    </div>
+                        <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
+                        <p>{profileData?.address?.address || "N/A"}</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" disabled>
                     <Edit className="mr-2 h-4 w-4" />
                     Update Address
                   </Button>
@@ -588,23 +720,23 @@ export default function BorrowerProfilePage() {
                     <div className="flex items-center">
                       <Badge
                         className={
-                          borrowerData.documentVerification.status === "verified"
+                          profileData?.is_verified
                             ? "bg-green-600 hover:bg-green-700"
                             : "bg-yellow-600 hover:bg-yellow-700"
                         }
                       >
-                        {borrowerData.documentVerification.status === "verified" ? "Verified" : "Pending"}
+                        {profileData?.is_verified ? "Verified" : "Pending"}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Document Type</h3>
-                        <p className="capitalize">{borrowerData.documentVerification.documentType.replace("-", " ")}</p>
+                        <p className="capitalize">{profileData?.document_type?.replace("-", " ") || "N/A"}</p>
                       </div>
-                      {borrowerData.documentVerification.status === "verified" && (
+                      {profileData?.verified_at && (
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Verified Date</h3>
-                          <p>{format(borrowerData.documentVerification.verifiedDate, "MMMM dd, yyyy")}</p>
+                          <p>{format(new Date(profileData.verified_at), "MMMM dd, yyyy")}</p>
                         </div>
                       )}
                     </div>
@@ -632,7 +764,7 @@ export default function BorrowerProfilePage() {
                     <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
                       <FormField
                         control={passwordForm.control}
-                        name="currentPassword"
+                        name="current_password"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Current Password</FormLabel>
@@ -657,7 +789,7 @@ export default function BorrowerProfilePage() {
 
                       <FormField
                         control={passwordForm.control}
-                        name="newPassword"
+                        name="new_password"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>New Password</FormLabel>
@@ -682,7 +814,7 @@ export default function BorrowerProfilePage() {
 
                       <FormField
                         control={passwordForm.control}
-                        name="confirmPassword"
+                        name="confirm_password"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Confirm New Password</FormLabel>
@@ -724,7 +856,7 @@ export default function BorrowerProfilePage() {
                       <p className="text-sm text-muted-foreground mt-1">
                         Add an extra layer of security to your account by enabling two-factor authentication.
                       </p>
-                      <Button variant="outline" className="mt-2">
+                      <Button variant="outline" className="mt-2" disabled>
                         Enable 2FA
                       </Button>
                     </div>
@@ -734,7 +866,7 @@ export default function BorrowerProfilePage() {
                       <p className="text-sm text-muted-foreground mt-1">
                         View your recent login activity to ensure your account hasn't been compromised.
                       </p>
-                      <Button variant="outline" className="mt-2">
+                      <Button variant="outline" className="mt-2" disabled>
                         View Login History
                       </Button>
                     </div>
@@ -745,6 +877,58 @@ export default function BorrowerProfilePage() {
           </Tabs>
         </div>
       </div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Your Profile QR Code</DialogTitle>
+            <DialogDescription>
+              Share this QR code with lenders to quickly identify your profile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4">
+            {qrCodeUrl ? (
+              <div className="border p-2 rounded-lg bg-white">
+                <img src={qrCodeUrl} alt="Profile QR Code" className="w-64 h-64" />
+              </div>
+            ) : (
+              <div className="text-center p-6">
+                <p>Could not generate QR code</p>
+              </div>
+            )}
+            <p className="mt-4 text-sm text-center text-muted-foreground">
+              This QR code contains your basic profile information
+            </p>
+          </div>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button variant="outline" onClick={() => setShowQrDialog(false)}>
+              Close
+            </Button>
+            {qrCodeUrl && (
+              <Button 
+                variant="default" 
+                onClick={() => {
+                  // Download QR code as image
+                  const link = document.createElement('a');
+                  link.href = qrCodeUrl;
+                  link.download = `profile-qr-${profileData?.full_name?.replace(/\s+/g, '-').toLowerCase() || 'user'}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+
+                  toast({
+                    title: "QR Code Downloaded",
+                    description: "Your profile QR code has been downloaded successfully.",
+                  });
+                }}
+              >
+                Download
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>

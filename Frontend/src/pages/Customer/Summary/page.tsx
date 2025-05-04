@@ -1,130 +1,105 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { format } from "date-fns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/default/data-table"
 import { BorrowedLoanColumns, UpcomingPaymentColumns } from "./column"
 import { LoanStatCard } from "./loan-stat-card"
-import { CalendarClock, CheckCircle, Clock, CreditCard, DollarSign, Shield } from "lucide-react"
-
-// Sample data - in a real app, this would come from your API
-const borrowerData = {
-  stats: {
-    activeLoans: 1,
-    completedLoans: 2,
-    totalBorrowed: 150000,
-    currentBalance: 50000,
-    totalPaid: 100000,
-    nextPaymentDue: new Date("2023-06-25"),
-    nextPaymentAmount: 5500,
-  },
-  loans: [
-    {
-      id: "LOAN-001",
-      lender: "Sameera Finance",
-      amount: 50000,
-      startDate: new Date("2023-01-15"),
-      endDate: new Date("2023-12-15"),
-      installments: 12,
-      installmentAmount: 5500,
-      remainingInstallments: 6,
-      status: "active",
-      interestRate: 13.75,
-    },
-    {
-      id: "LOAN-002",
-      lender: "Capital Loans",
-      amount: 30000,
-      startDate: new Date("2022-06-10"),
-      endDate: new Date("2022-12-10"),
-      installments: 6,
-      installmentAmount: 5500,
-      remainingInstallments: 0,
-      status: "completed",
-      interestRate: 12.5,
-    },
-    {
-      id: "LOAN-003",
-      lender: "Hill Country Finance",
-      amount: 70000,
-      startDate: new Date("2022-03-20"),
-      endDate: new Date("2022-10-20"),
-      installments: 8,
-      installmentAmount: 9625,
-      remainingInstallments: 0,
-      status: "completed",
-      interestRate: 10.0,
-    },
-  ],
-  upcomingPayments: [
-    {
-      id: "PAY-045",
-      loanId: "LOAN-001",
-      dueDate: new Date("2023-06-25"),
-      amount: 5500,
-      status: "upcoming",
-      lender: "Sameera Finance",
-    },
-    {
-      id: "PAY-046",
-      loanId: "LOAN-001",
-      dueDate: new Date("2023-07-25"),
-      amount: 5500,
-      status: "upcoming",
-      lender: "Sameera Finance",
-    },
-    {
-      id: "PAY-047",
-      loanId: "LOAN-001",
-      dueDate: new Date("2023-08-25"),
-      amount: 5500,
-      status: "upcoming",
-      lender: "Sameera Finance",
-    },
-  ],
-  recentPayments: [
-    {
-      id: "PAY-044",
-      loanId: "LOAN-001",
-      paidDate: new Date("2023-05-25"),
-      amount: 5500,
-      method: "cash",
-      lender: "Sameera Finance",
-    },
-    {
-      id: "PAY-043",
-      loanId: "LOAN-001",
-      paidDate: new Date("2023-04-25"),
-      amount: 5500,
-      method: "bank_transfer",
-      lender: "Sameera Finance",
-    },
-    {
-      id: "PAY-042",
-      loanId: "LOAN-001",
-      paidDate: new Date("2023-03-25"),
-      amount: 5500,
-      method: "card",
-      lender: "Sameera Finance",
-    },
-  ],
-}
+import { CalendarClock, CheckCircle, Clock, CreditCard, DollarSign, Shield, Loader2 } from "lucide-react"
+import { loanService } from "@/services/api"
+import { useToast } from "@/hooks/use-toast"
 
 export default function BorrowerLoanSummaryPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("overview")
+  const [loading, setLoading] = useState(true)
+  const [borrowerData, setBorrowerData] = useState<any>({
+    stats: {
+      activeLoans: 0,
+      completedLoans: 0,
+      totalBorrowed: 0,
+      currentBalance: 0,
+      totalPaid: 0,
+      nextPaymentDue: new Date(),
+      nextPaymentAmount: 0,
+    },
+    loans: [],
+    upcomingPayments: [],
+    recentPayments: []
+  })
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchLoanSummary = async () => {
+      setLoading(true)
+      try {
+        const summaryData = await loanService.getBorrowerLoanSummary()
+        
+        // Format dates for the data
+        if (summaryData.stats.nextPaymentDue) {
+          summaryData.stats.nextPaymentDue = new Date(summaryData.stats.nextPaymentDue)
+        }
+        
+        if (summaryData.loans) {
+          summaryData.loans = summaryData.loans.map((loan: any) => ({
+            ...loan,
+            startDate: new Date(loan.startDate),
+            endDate: new Date(loan.endDate)
+          }))
+        }
+        
+        if (summaryData.upcomingPayments) {
+          summaryData.upcomingPayments = summaryData.upcomingPayments.map((payment: any) => ({
+            ...payment,
+            dueDate: new Date(payment.dueDate)
+          }))
+        }
+        
+        if (summaryData.recentPayments) {
+          summaryData.recentPayments = summaryData.recentPayments.map((payment: any) => ({
+            ...payment,
+            paidDate: new Date(payment.paidDate)
+          }))
+        }
+        
+        setBorrowerData(summaryData)
+      } catch (error) {
+        console.error("Error fetching loan summary:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load loan summary data. Please try again.",
+          variant: "destructive"
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchLoanSummary()
+  }, [toast])
 
   // Filter active and completed loans
-  const activeLoans = borrowerData.loans.filter((loan) => loan.status === "active")
-  const completedLoans = borrowerData.loans.filter((loan) => loan.status === "completed")
+  const activeLoans = borrowerData.loans.filter((loan: any) => loan.status === "active")
+  const completedLoans = borrowerData.loans.filter((loan: any) => loan.status === "completed")
 
   // Calculate days until next payment
   const today = new Date()
   const nextPaymentDate = borrowerData.stats.nextPaymentDue
-  const daysUntilNextPayment = Math.ceil((nextPaymentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  const daysUntilNextPayment = nextPaymentDate ? 
+    Math.ceil((nextPaymentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : 0
+
+  if (loading) {
+    return (
+      <div className="container mx-auto flex justify-center items-center h-screen">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p>Loading loan summary...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
@@ -164,7 +139,36 @@ export default function BorrowerLoanSummaryPage() {
             />
           </div>
 
-         
+          {nextPaymentDate && borrowerData.stats.nextPaymentAmount > 0 && (
+            <Card className="bg-white border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Next Payment Due</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                  <div className="space-y-1 col-span-2">
+                    <div className="flex items-center">
+                      <CalendarClock className="h-5 w-5 text-amber-500 mr-2" />
+                      <span className="font-medium">{format(nextPaymentDate, "MMMM dd, yyyy")}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="h-5 w-5 text-amber-500 mr-2" />
+                      <span className="font-medium">Rs {borrowerData.stats.nextPaymentAmount.toLocaleString()}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{daysUntilNextPayment} days remaining</p>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={() => navigate("/payments/make-payment", {
+                      state: {
+                        loanId: activeLoans.length > 0 ? activeLoans[0].id : null,
+                        amount: borrowerData.stats.nextPaymentAmount,
+                      }
+                    })}>Pay Now</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Loan Summary Card */}
           <Card className="bg-white border shadow-sm">
@@ -214,19 +218,21 @@ export default function BorrowerLoanSummaryPage() {
           )}
 
           {/* Upcoming Payments Preview */}
-          <Card className="bg-white border shadow-sm">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between">
-                <CardTitle className="text-lg">Upcoming Payments</CardTitle>
-                <Button variant="link" onClick={() => setActiveTab("payments")} className="p-0 h-auto">
-                  View All
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <DataTable columns={UpcomingPaymentColumns} data={borrowerData.upcomingPayments.slice(0, 3)} />
-            </CardContent>
-          </Card>
+          {borrowerData.upcomingPayments.length > 0 && (
+            <Card className="bg-white border shadow-sm">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between">
+                  <CardTitle className="text-lg">Upcoming Payments</CardTitle>
+                  <Button variant="link" onClick={() => setActiveTab("payments")} className="p-0 h-auto">
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <DataTable columns={UpcomingPaymentColumns} data={borrowerData.upcomingPayments.slice(0, 3)} />
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Loans Tab */}
@@ -269,7 +275,13 @@ export default function BorrowerLoanSummaryPage() {
               <CardTitle className="text-lg">Upcoming Payments</CardTitle>
             </CardHeader>
             <CardContent>
-              <DataTable columns={UpcomingPaymentColumns} data={borrowerData.upcomingPayments} />
+              {borrowerData.upcomingPayments.length > 0 ? (
+                <DataTable columns={UpcomingPaymentColumns} data={borrowerData.upcomingPayments} />
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">You have no upcoming payments</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -278,32 +290,38 @@ export default function BorrowerLoanSummaryPage() {
               <CardTitle className="text-lg">Recent Payments</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">ID</th>
-                      <th className="text-left py-3 px-4">Loan</th>
-                      <th className="text-left py-3 px-4">Paid Date</th>
-                      <th className="text-left py-3 px-4">Amount</th>
-                      <th className="text-left py-3 px-4">Method</th>
-                      <th className="text-left py-3 px-4">Lender</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {borrowerData.recentPayments.map((payment) => (
-                      <tr key={payment.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4">{payment.id}</td>
-                        <td className="py-3 px-4">{payment.loanId}</td>
-                        <td className="py-3 px-4">{format(payment.paidDate, "MMM dd, yyyy")}</td>
-                        <td className="py-3 px-4">Rs {payment.amount.toLocaleString()}</td>
-                        <td className="py-3 px-4 capitalize">{payment.method.replace("_", " ")}</td>
-                        <td className="py-3 px-4">{payment.lender}</td>
+              {borrowerData.recentPayments.length > 0 ? (
+                <div className="overflow-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">ID</th>
+                        <th className="text-left py-3 px-4">Loan</th>
+                        <th className="text-left py-3 px-4">Paid Date</th>
+                        <th className="text-left py-3 px-4">Amount</th>
+                        <th className="text-left py-3 px-4">Method</th>
+                        <th className="text-left py-3 px-4">Lender</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {borrowerData.recentPayments.map((payment: any) => (
+                        <tr key={payment.id} className="border-b hover:bg-gray-50">
+                          <td className="py-3 px-4">{payment.id}</td>
+                          <td className="py-3 px-4">{payment.loanId}</td>
+                          <td className="py-3 px-4">{format(payment.paidDate, "MMM dd, yyyy")}</td>
+                          <td className="py-3 px-4">Rs {payment.amount.toLocaleString()}</td>
+                          <td className="py-3 px-4 capitalize">{payment.method.replace("_", " ")}</td>
+                          <td className="py-3 px-4">{payment.lender}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">You have no recent payments</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -311,4 +329,3 @@ export default function BorrowerLoanSummaryPage() {
     </div>
   )
 }
-

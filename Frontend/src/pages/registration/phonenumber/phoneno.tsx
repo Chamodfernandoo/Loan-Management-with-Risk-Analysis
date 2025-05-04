@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../../components/ui/form"
 import { Input } from "../../../components/ui/input"
 import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group"
-
 interface PhonenoProps {
   onDataChange?: (data: any) => void
 }
@@ -34,12 +33,30 @@ const Phoneno = ({ onDataChange }: PhonenoProps) => {
   const formValues = form.watch()
   const isValid = form.formState.isValid
 
-  useEffect(() => {
-    if (isValid && onDataChange) {
-      onDataChange(formValues)
-    }
-  }, [formValues, isValid, onDataChange])
+  const previousValidState = useRef<{ 
+    isValid: boolean 
+    data: { userType: string; phoneNumber: string } | null 
+  }>({ 
+    isValid: false, 
+    data: null 
+  })
 
+  useEffect(() => {
+    // Only notify parent when validation state changes from invalid to valid
+    if (isValid && !previousValidState.current.isValid && onDataChange) {
+      const data = {
+        userType: formValues.userType,
+        phoneNumber: formValues.phoneNumber
+      }
+      onDataChange(data)
+    }
+    
+    // Update our ref with current state
+    previousValidState.current = { 
+      isValid, 
+      data: { userType: formValues.userType, phoneNumber: formValues.phoneNumber } 
+    }
+  }, [isValid, formValues.userType, formValues.phoneNumber, onDataChange])  
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (onDataChange) {
       onDataChange(values)
@@ -104,5 +121,4 @@ const Phoneno = ({ onDataChange }: PhonenoProps) => {
     </div>
   )
 }
-
 export default Phoneno

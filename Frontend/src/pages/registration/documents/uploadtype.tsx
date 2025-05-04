@@ -65,17 +65,18 @@ const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
 
   useEffect(() => {
     if (isValid && onDataChange) {
-      onDataChange(formValues)
+      // Only notify parent when form is valid and when validity or values meaningfully change
+      onDataChange({...formValues})
     }
-  }, [formValues, isValid, onDataChange])
+  }, [isValid, JSON.stringify(formValues)])
 
   // Add this to pass data back to the parent when files are uploaded
   useEffect(() => {
     if (files && files.length > 0 && onDataChange) {
-      onDataChange({ files })
+      // Use more specific state keys to avoid unnecessary updates
+      onDataChange({ documentFiles: files })
     }
-  }, [files, onDataChange])
-
+  }, [files?.length])
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (onDataChange) {
       onDataChange(values)
@@ -121,9 +122,21 @@ const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
           if (activeInput === "front") {
             form.setValue("frontSide", dataTransfer.files)
             setFrontPreview(URL.createObjectURL(blob))
+            if (onDataChange) {
+              onDataChange({
+                ...form.getValues(),
+                frontSide: dataTransfer.files
+              })
+            }
           } else if (activeInput === "back") {
             form.setValue("backSide", dataTransfer.files)
             setBackPreview(URL.createObjectURL(blob))
+            if (onDataChange) {
+              onDataChange({
+                ...form.getValues(),
+                backSide: dataTransfer.files
+              })
+            }
           }
         }
       }, "image/jpeg")
@@ -133,15 +146,30 @@ const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: "front" | "back") => {
-    const file = e.target.files?.[0]
-    if (file) {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      const file = files[0]
       const url = URL.createObjectURL(file)
+      
       if (side === "front") {
         setFrontPreview(url)
       } else {
         setBackPreview(url)
       }
-      setFiles(e.target.files)
+      
+      // Notify parent component with the actual files
+      if (onDataChange) {
+        const updatedData = { ...form.getValues() }
+        
+        // Only set the property if files is not null
+        if (side === "front") {
+          updatedData.frontSide = files
+        } else {
+          updatedData.backSide = files
+        }
+        
+        onDataChange(updatedData)
+      }
     }
   }
 
@@ -300,7 +328,7 @@ const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
               </div>
             )}
 
-            <FormDescription>
+            <div className="text-sm text-muted-foreground mt-4">
               <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                 <p>Requirements:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
@@ -309,7 +337,7 @@ const Uploadtype = ({ onDataChange, docType }: UploadtypeProps) => {
                   <li>Place documents against a solid-colored background</li>
                 </ul>
               </div>
-            </FormDescription>
+            </div>
           </form>
         </Form>
       </div>

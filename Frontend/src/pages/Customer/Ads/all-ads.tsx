@@ -7,195 +7,58 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
-
-// Sample data with interest rates and loan types
-const sampleAds: LenderAd[] = [
-  {
-    id: "1",
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2023-01-15"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "Capital Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-1",
-    interestRate: 12.5,
-    loanTypes: ["Personal", "Business"],
-  },
-  {
-    id: "11",
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2023-01-15"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "Cap Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-1",
-    interestRate: 12.5,
-    loanTypes: ["Personal", "Business"],
-  },
-  {
-    id: "18",
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2023-01-15"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "tal Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-1",
-    interestRate: 12.5,
-    loanTypes: ["Personal", "Business"],
-  },
-  {
-    id: "19",
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2023-01-15"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "val Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-1",
-    interestRate: 12.5,
-    loanTypes: ["Personal", "Business"],
-  },
-  {
-    id: "8",
-    createdAt: new Date("2023-01-25"),
-    updatedAt: new Date("2023-01-25"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "Dil Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-1",
-    interestRate: 10.5,
-    loanTypes: [ "Business"],
-  },
-  {
-    id: "2",
-    createdAt: new Date("2023-02-20"),
-    updatedAt: new Date("2023-02-20"),
-    location: {
-      district: "Kandy",
-      city: "Kandy",
-    },
-    shopName: "Hill Country Finance",
-    lenderName: "Samantha Silva",
-    contactNumber: "071-9876543",
-    description:
-      "Specializing in small business loans and microfinance. Serving the Kandy region for over 10 years with trusted financial services.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-2",
-    interestRate: 14.0,
-    loanTypes: ["Business", "Microfinance", "Agriculture"],
-  },
-  {
-    id: "3",
-    createdAt: new Date("2023-03-10"),
-    updatedAt: new Date("2023-03-10"),
-    location: {
-      district: "Gampaha",
-      city: "Negombo",
-    },
-    shopName: "Coastal Credit",
-    lenderName: "Michael Fernando",
-    contactNumber: "076-5554433",
-    description:
-      "Fast cash loans for emergencies. Low interest rates and same-day approval available for qualified applicants.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-3",
-    interestRate: 15.5,
-    loanTypes: ["Personal", "Emergency"],
-  },
-  {
-    id: "4",
-    createdAt: new Date("2023-04-05"),
-    updatedAt: new Date("2023-04-05"),
-    location: {
-      district: "Kegalle",
-      city: "Kegalle",
-    },
-    shopName: "Sameera Finance",
-    lenderName: "Sameera Rathnayake",
-    contactNumber: "077-6653521",
-    description:
-      "Family-owned lending business offering personal loans, business loans, and installment plans. Trusted by the community for generations.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "current-lender-id",
-    interestRate: 13.75,
-    loanTypes: ["Personal", "Business", "Education"],
-  },
-  {
-    id: "5",
-    createdAt: new Date("2023-05-12"),
-    updatedAt: new Date("2023-05-12"),
-    location: {
-      district: "Colombo",
-      city: "Dehiwala",
-    },
-    shopName: "Metro Loans",
-    lenderName: "Anil Jayawardena",
-    contactNumber: "070-1122334",
-    description:
-      "Providing financial solutions for individuals and small businesses. Competitive rates and personalized service.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-5",
-    interestRate: 11.9,
-    loanTypes: ["Personal", "Home", "Vehicle"],
-  },
-  {
-    id: "6",
-    createdAt: new Date("2023-06-18"),
-    updatedAt: new Date("2023-06-18"),
-    location: {
-      district: "Galle",
-      city: "Galle",
-    },
-    shopName: "Southern Lenders",
-    lenderName: "Dinesh Gunawardena",
-    contactNumber: "077-8899001",
-    description:
-      "Serving the southern province with reliable lending services. We specialize in small business loans and personal financing.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-6",
-    interestRate: 13.25,
-    loanTypes: ["Business", "Agriculture", "Microfinance"],
-  },
-]
+import { adService } from "@/services/api"
+import { useToast } from "@/hooks/use-toast"
 
 const BorrowerAllAdsPage: React.FC = () => {
-  const [filteredAds, setFilteredAds] = useState<LenderAd[]>(sampleAds)
+  const [ads, setAds] = useState<LenderAd[]>([])
+  const [filteredAds, setFilteredAds] = useState<LenderAd[]>([])
   const [sortOption, setSortOption] = useState<string>("interest-asc")
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const { toast } = useToast()
+
+  // Fetch ads when component mounts
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        setLoading(true)
+        const response = await adService.getAds()
+        
+        // Format the data
+        const formattedAds = response.map((ad: any) => ({
+          id: ad._id || ad.id,
+          createdAt: new Date(ad.created_at || ad.createdAt),
+          updatedAt: new Date(ad.updated_at || ad.updatedAt),
+          location: ad.location,
+          shopName: ad.shop_name || ad.shopName,
+          lenderName: ad.lender_name || ad.lenderName,
+          contactNumber: ad.contact_number || ad.contactNumber,
+          description: ad.description,
+          photos: ad.photos || [],
+          lenderId: ad.lender_id || ad.lenderId,
+          interestRate: ad.interest_rate || ad.interestRate || 0,
+          loanTypes: ad.loan_types || ad.loanTypes || [],
+        }))
+        
+        setAds(formattedAds)
+        setFilteredAds(formattedAds)
+      } catch (error: any) {
+        console.error("Error fetching advertisements:", error)
+        toast({
+          title: "Failed to load advertisements",
+          description: error.response?.data?.detail || "There was an error loading advertisements.",
+          variant: "destructive"
+        })
+        setAds([])
+        setFilteredAds([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchAds()
+  }, [toast])
 
   // Apply filters
   const handleFilterChange = (filters: {
@@ -203,7 +66,7 @@ const BorrowerAllAdsPage: React.FC = () => {
     interestRate?: number
     loanTypes?: string[]
   }) => {
-    let result = [...sampleAds]
+    let result = [...ads]
 
     // Filter by location
     if (filters.location?.district) {
@@ -214,14 +77,16 @@ const BorrowerAllAdsPage: React.FC = () => {
       result = result.filter((ad) => ad.location.city === filters.location?.city)
     }
 
-    // Filter by interest rate
+    // Filter by interest rate - Fix for possibly undefined interestRate
     if (filters.interestRate !== undefined) {
-      result = result.filter((ad) => ad.interestRate <= filters.interestRate!)
+      result = result.filter((ad) => (ad.interestRate || 0) <= filters.interestRate!)
     }
 
-    // Filter by loan types
+    // Filter by loan types - Fix for possibly undefined loanTypes
     if (filters.loanTypes && filters.loanTypes.length > 0) {
-      result = result.filter((ad) => filters.loanTypes!.some((type) => ad.loanTypes.includes(type)))
+      result = result.filter((ad) => 
+        filters.loanTypes!.some((type) => (ad.loanTypes || []).includes(type))
+      )
     }
 
     setFilteredAds(result)
@@ -233,10 +98,10 @@ const BorrowerAllAdsPage: React.FC = () => {
 
     switch (sortOption) {
       case "interest-asc":
-        sortedAds.sort((a, b) => a.interestRate - b.interestRate)
+        sortedAds.sort((a, b) => (a.interestRate || 0) - (b.interestRate || 0))
         break
       case "interest-desc":
-        sortedAds.sort((a, b) => b.interestRate - a.interestRate)
+        sortedAds.sort((a, b) => (b.interestRate || 0) - (a.interestRate || 0))
         break
       case "date-desc":
         sortedAds.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
@@ -249,15 +114,15 @@ const BorrowerAllAdsPage: React.FC = () => {
     }
 
     setFilteredAds(sortedAds)
-  }, [sortOption])
+  }, [sortOption, ads])
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
+        <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
         <h1 className="text-2xl sm:text-3xl font-bold">Find Lenders</h1>
 
         <div className="w-full sm:w-auto">
@@ -278,7 +143,11 @@ const BorrowerAllAdsPage: React.FC = () => {
         </div>
 
         <div className="lg:col-span-3 order-1 lg:order-2">
-          {filteredAds.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredAds.length === 0 ? (
             <div className="bg-gray-50 rounded-lg p-6 sm:p-8 text-center">
               <h3 className="text-lg font-medium mb-2">No lenders found</h3>
               <p className="text-muted-foreground mb-4">Try adjusting your filters to find more lenders</p>

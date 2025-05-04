@@ -1,5 +1,4 @@
-import { DialogFooter } from "@/components/ui/dialog"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { format, formatDistanceToNow } from "date-fns"
 import {ArrowLeft,Bell, CheckCircle2,CreditCard,Info,MoreVertical,Search,Trash2, AlertCircle, BellOff, Calendar, Store} from "lucide-react"
@@ -9,132 +8,88 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import {DropdownMenu,DropdownMenuContent,DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { notificationService } from "@/services/api"
+import { useNotifications } from "@/context/NotificationContext"
+import { Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 // Notification type definition
-type NotificationType =| "payment_due"| "payment_confirmation"| "loan_status"| "loan_approved"| "system_update"| "new_lender_ad"| "document_verification"
+type NotificationType =| "payment_due"| "payment_received"| "payment_overdue"| "loan_application"| "loan_approved"| "loan_rejected"| "system_update"| "new_lender_ad"| "document_verification"
 
 // Notification interface
 interface Notification {
-  id: string
+  _id: string
   type: NotificationType
   title: string
   message: string
-  timestamp: Date
+  timestamp: string
   read: boolean
-  relatedId?: string
-  relatedName?: string
-  amount?: number
-  dueDate?: Date
+  related_id?: string
+  related_data?: {
+    amount?: number
+    due_date?: string
+    lender_name?: string
+    [key: string]: any
+  }
 }
-
-// Sample notifications data
-const sampleNotifications: Notification[] = [
-  {
-    id: "notif-001",
-    type: "payment_due",
-    title: "Payment Due Soon",
-    message: "Your payment of Rs 5,500 for loan LOAN-001 is due in 3 days.",
-    timestamp: new Date("2023-06-15T09:30:00"),
-    read: false,
-    relatedId: "LOAN-001",
-    relatedName: "Sameera Finance",
-    amount: 5500,
-    dueDate: new Date("2023-06-18T00:00:00"),
-  },
-  {
-    id: "notif-002",
-    type: "payment_confirmation",
-    title: "Payment Confirmed",
-    message: "Your payment of Rs 5,500 for loan LOAN-001 has been received.",
-    timestamp: new Date("2023-05-15T14:15:00"),
-    read: false,
-    relatedId: "LOAN-001",
-    relatedName: "Sameera Finance",
-    amount: 5500,
-  },
-  {
-    id: "notif-003",
-    type: "loan_status",
-    title: "Loan Application Update",
-    message: "Your loan application for Rs 75,000 is under review.",
-    timestamp: new Date("2023-06-13T11:45:00"),
-    read: true,
-    relatedId: "APP-002",
-    amount: 75000,
-  },
-  {
-    id: "notif-004",
-    type: "system_update",
-    title: "System Update",
-    message: "The loan management system will be undergoing maintenance on June 20, 2023, from 2:00 AM to 4:00 AM.",
-    timestamp: new Date("2023-06-12T16:20:00"),
-    read: true,
-  },
-  {
-    id: "notif-005",
-    type: "new_lender_ad",
-    title: "New Lender in Your Area",
-    message: "Capital Loans is now offering personal loans in Colombo with competitive interest rates.",
-    timestamp: new Date("2023-06-11T10:05:00"),
-    read: true,
-    relatedName: "Capital Loans",
-  },
-  {
-    id: "notif-006",
-    type: "document_verification",
-    title: "Document Verification Required",
-    message: "Please upload your updated ID card to complete your profile verification.",
-    timestamp: new Date("2023-06-10T13:40:00"),
-    read: false,
-  },
-  {
-    id: "notif-007",
-    type: "loan_approved",
-    title: "Loan Approved",
-    message: "Your loan application for Rs 60,000 has been approved by Hill Country Finance.",
-    timestamp: new Date("2023-06-08T09:15:00"),
-    read: true,
-    relatedId: "LOAN-004",
-    relatedName: "Hill Country Finance",
-    amount: 60000,
-  },
-  {
-    id: "notif-008",
-    type: "payment_due",
-    title: "Payment Overdue",
-    message: "Your payment of Rs 4,200 for loan LOAN-003 is overdue by 2 days.",
-    timestamp: new Date("2023-06-07T11:30:00"),
-    read: false,
-    relatedId: "LOAN-003",
-    relatedName: "Coastal Credit",
-    amount: 4200,
-    dueDate: new Date("2023-06-05T00:00:00"),
-  },
-]
 
 export default function BorrowerNotificationsPage() {
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications)
+  const { toast } = useToast()
+  const { refreshUnreadCount } = useNotifications()
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [confirmClearAll, setConfirmClearAll] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [notificationDetailOpen, setNotificationDetailOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [totalNotifications, setTotalNotifications] = useState(0)
+  const [limit] = useState(20)
+  const [offset, setOffset] = useState(0)
 
-  // Filter notifications based on active tab and search query
+  // Fetch notifications
+  useEffect(() => {
+    fetchNotifications()
+  }, [activeTab, offset])
+
+  const fetchNotifications = async () => {
+    setIsLoading(true)
+    try {
+      const params: any = { limit, offset }
+      
+      // Set read parameter based on the activeTab
+      if (activeTab === "unread") {
+        params.read = false
+      } else if (activeTab === "read") {
+        params.read = true
+      }
+      
+      const response = await notificationService.getNotifications(params)
+      setNotifications(response.notifications || [])
+      setTotalNotifications(response.total || 0)
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load notifications. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Filter notifications based on search query
   const filteredNotifications = notifications.filter((notification) => {
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "unread" && !notification.read) ||
-      (activeTab === "read" && notification.read)
-
     const matchesSearch =
       notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       notification.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (notification.relatedName && notification.relatedName.toLowerCase().includes(searchQuery.toLowerCase()))
+      (notification.related_data?.lender_name && 
+        notification.related_data.lender_name.toLowerCase().includes(searchQuery.toLowerCase()))
 
-    return matchesTab && matchesSearch
+    return matchesSearch
   })
 
   // Get notification icon based on type
@@ -142,12 +97,16 @@ export default function BorrowerNotificationsPage() {
     switch (type) {
       case "payment_due":
         return <Calendar className="h-5 w-5 text-amber-500" />
-      case "payment_confirmation":
+      case "payment_received":
         return <CheckCircle2 className="h-5 w-5 text-green-500" />
-      case "loan_status":
+      case "payment_overdue":
+        return <AlertCircle className="h-5 w-5 text-red-500" />
+      case "loan_application":
         return <CreditCard className="h-5 w-5 text-blue-500" />
       case "loan_approved":
         return <CheckCircle2 className="h-5 w-5 text-green-500" />
+      case "loan_rejected":
+        return <AlertCircle className="h-5 w-5 text-red-500" />
       case "system_update":
         return <Info className="h-5 w-5 text-amber-500" />
       case "new_lender_ad":
@@ -160,28 +119,86 @@ export default function BorrowerNotificationsPage() {
   }
 
   // Mark notification as read
-  const markAsRead = (id: string) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification,
-      ),
-    )
+  const markAsRead = async (id: string) => {
+    try {
+      await notificationService.markAsRead(id)
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification._id === id ? { ...notification, read: true } : notification,
+        ),
+      )
+      refreshUnreadCount() // Update the unread count in the context
+    } catch (error) {
+      console.error("Error marking notification as read:", error)
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read.",
+        variant: "destructive"
+      })
+    }
   }
 
   // Mark all notifications as read
-  const markAllAsRead = () => {
-    setNotifications((prevNotifications) => prevNotifications.map((notification) => ({ ...notification, read: true })))
+  const markAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead()
+      setNotifications((prevNotifications) => 
+        prevNotifications.map((notification) => ({ ...notification, read: true }))
+      )
+      refreshUnreadCount() // Update the unread count in the context
+      toast({
+        title: "Success",
+        description: "All notifications marked as read.",
+      })
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error)
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read.",
+        variant: "destructive"
+      })
+    }
   }
 
   // Delete notification
-  const deleteNotification = (id: string) => {
-    setNotifications((prevNotifications) => prevNotifications.filter((notification) => notification.id !== id))
+  const deleteNotification = async (id: string) => {
+    try {
+      await notificationService.deleteNotification(id)
+      setNotifications((prevNotifications) => 
+        prevNotifications.filter((notification) => notification._id !== id)
+      )
+      toast({
+        title: "Success",
+        description: "Notification deleted successfully.",
+      })
+    } catch (error) {
+      console.error("Error deleting notification:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete notification.",
+        variant: "destructive"
+      })
+    }
   }
 
   // Clear all notifications
-  const clearAllNotifications = () => {
-    setNotifications([])
-    setConfirmClearAll(false)
+  const clearAllNotifications = async () => {
+    try {
+      await notificationService.deleteAllNotifications()
+      setNotifications([])
+      setConfirmClearAll(false)
+      toast({
+        title: "Success",
+        description: "All notifications cleared successfully.",
+      })
+    } catch (error) {
+      console.error("Error clearing all notifications:", error)
+      toast({
+        title: "Error",
+        description: "Failed to clear all notifications.",
+        variant: "destructive"
+      })
+    }
   }
 
   // View notification details
@@ -189,12 +206,23 @@ export default function BorrowerNotificationsPage() {
     setSelectedNotification(notification)
     setNotificationDetailOpen(true)
     if (!notification.read) {
-      markAsRead(notification.id)
+      markAsRead(notification._id)
     }
+  }
+
+  // Handle load more notifications
+  const loadMoreNotifications = () => {
+    setOffset(offset + limit)
   }
 
   // Count unread notifications
   const unreadCount = notifications.filter((notification) => !notification.read).length
+
+  // Format ISO date to relative time
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return formatDistanceToNow(date, { addSuffix: true })
+  }
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-6 max-w-5xl">
@@ -214,7 +242,7 @@ export default function BorrowerNotificationsPage() {
               <CardDescription>Stay updated on your loans, payments, and new lenders</CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => markAllAsRead()} disabled={unreadCount === 0}>
+              <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 Mark All Read
               </Button>
@@ -253,67 +281,82 @@ export default function BorrowerNotificationsPage() {
 
           {/* Notifications List */}
           <div className="space-y-2">
-            {filteredNotifications.length > 0 ? (
-              filteredNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${!notification.read ? "border-l-4 border-l-primary" : ""}`}
-                  onClick={() => viewNotificationDetails(notification)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1">{getNotificationIcon(notification.type)}</div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-start">
-                        <h3 className={`font-medium ${!notification.read ? "text-primary" : ""}`}>
-                          {notification.title}
-                        </h3>
-                        <div className="flex items-center">
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
-                          </span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {!notification.read && (
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredNotifications.length > 0 ? (
+              <>
+                {filteredNotifications.map((notification) => (
+                  <div
+                    key={notification._id}
+                    className={`p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${!notification.read ? "border-l-4 border-l-primary" : ""}`}
+                    onClick={() => viewNotificationDetails(notification)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1">{getNotificationIcon(notification.type)}</div>
+                      <div className="flex-grow">
+                        <div className="flex justify-between items-start">
+                          <h3 className={`font-medium ${!notification.read ? "text-primary" : ""}`}>
+                            {notification.title}
+                          </h3>
+                          <div className="flex items-center">
+                            <span className="text-xs text-muted-foreground mr-2">
+                              {formatRelativeTime(notification.timestamp)}
+                            </span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {!notification.read && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      markAsRead(notification._id)
+                                    }}
+                                  >
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    Mark as read
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    markAsRead(notification.id)
+                                    deleteNotification(notification._id)
                                   }}
+                                  className="text-red-600"
                                 >
-                                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                                  Mark as read
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
                                 </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  deleteNotification(notification.id)
-                                }}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
 
-                      {/* Show urgent badge for overdue payments */}
-                      {notification.type === "payment_due" &&
-                        notification.dueDate &&
-                        notification.dueDate < new Date() && <Badge className="mt-2 bg-red-500">Urgent</Badge>}
+                        {/* Show urgent badge for overdue payments */}
+                        {notification.type === "payment_overdue" && (
+                          <Badge className="mt-2 bg-red-500">Urgent</Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+                
+                {/* Load More button */}
+                {notifications.length < totalNotifications && (
+                  <div className="flex justify-center mt-4">
+                    <Button variant="outline" onClick={loadMoreNotifications}>
+                      Load More
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-12">
                 <BellOff className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
@@ -329,7 +372,7 @@ export default function BorrowerNotificationsPage() {
         </CardContent>
         <CardFooter className="flex justify-between text-sm text-muted-foreground">
           <p>
-            Showing {filteredNotifications.length} of {notifications.length} notifications
+            Showing {filteredNotifications.length} of {totalNotifications} notifications
           </p>
           {notifications.length > 0 && (
             <Button variant="link" size="sm" className="p-0" onClick={() => setActiveTab("all")}>
@@ -349,69 +392,81 @@ export default function BorrowerNotificationsPage() {
                 <span>{selectedNotification.title}</span>
               </DialogTitle>
               <DialogDescription>
-                {format(selectedNotification.timestamp, "MMMM dd, yyyy 'at' h:mm a")}
+                {format(new Date(selectedNotification.timestamp), "MMMM dd, yyyy 'at' h:mm a")}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <p className="mb-4">{selectedNotification.message}</p>
 
-              {selectedNotification.relatedId && (
+              {selectedNotification.related_id && selectedNotification.related_data && (
                 <div className="bg-gray-50 p-3 rounded-md mb-4">
                   <div className="flex flex-col gap-2">
                     {selectedNotification.type === "payment_due" && (
                       <>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Loan ID:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedId}</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Lender:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedName}</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_data.lender_name}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Amount Due:</span>
                           <span className="text-sm font-medium">
-                            Rs {selectedNotification.amount?.toLocaleString()}
+                            Rs {selectedNotification.related_data.amount?.toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Due Date:</span>
                           <span className="text-sm font-medium">
-                            {selectedNotification.dueDate && format(selectedNotification.dueDate, "MMMM dd, yyyy")}
+                            {selectedNotification.related_data.due_date && 
+                              format(new Date(selectedNotification.related_data.due_date), "MMMM dd, yyyy")}
                           </span>
                         </div>
                       </>
                     )}
 
-                    {selectedNotification.type === "payment_confirmation" && (
+                    {selectedNotification.type === "payment_received" && (
                       <>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Loan ID:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedId}</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Lender:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedName}</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_data.lender_name}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Amount Paid:</span>
                           <span className="text-sm font-medium">
-                            Rs {selectedNotification.amount?.toLocaleString()}
+                            Rs {selectedNotification.related_data.amount?.toLocaleString()}
                           </span>
                         </div>
                       </>
                     )}
 
-                    {selectedNotification.type === "loan_status" && (
+                    {selectedNotification.type === "payment_overdue" && (
                       <>
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Application ID:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedId}</span>
+                          <span className="text-sm text-muted-foreground">Loan ID:</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_id}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Requested Amount:</span>
+                          <span className="text-sm text-muted-foreground">Lender:</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_data.lender_name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Amount Due:</span>
                           <span className="text-sm font-medium">
-                            Rs {selectedNotification.amount?.toLocaleString()}
+                            Rs {selectedNotification.related_data.amount?.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Due Date:</span>
+                          <span className="text-sm font-medium">
+                            {selectedNotification.related_data.due_date && 
+                              format(new Date(selectedNotification.related_data.due_date), "MMMM dd, yyyy")}
                           </span>
                         </div>
                       </>
@@ -421,16 +476,22 @@ export default function BorrowerNotificationsPage() {
                       <>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Loan ID:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedId}</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Lender:</span>
-                          <span className="text-sm font-medium">{selectedNotification.relatedName}</span>
+                          <span className="text-sm font-medium">{selectedNotification.related_data.lender_name}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Loan Amount:</span>
                           <span className="text-sm font-medium">
-                            Rs {selectedNotification.amount?.toLocaleString()}
+                            Rs {selectedNotification.related_data.amount?.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Term:</span>
+                          <span className="text-sm font-medium">
+                            {selectedNotification.related_data.term_months} months
                           </span>
                         </div>
                       </>
@@ -439,14 +500,30 @@ export default function BorrowerNotificationsPage() {
                 </div>
               )}
 
-              {selectedNotification.type === "new_lender_ad" && (
-                <div className="bg-gray-50 p-3 rounded-md mb-4">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Lender:</span>
-                      <span className="text-sm font-medium">{selectedNotification.relatedName}</span>
-                    </div>
-                  </div>
+              {/* Action buttons for specific notification types */}
+              {selectedNotification.type === "payment_due" && (
+                <div className="flex justify-end mt-4">
+                  <Button 
+                    onClick={() => {
+                      setNotificationDetailOpen(false)
+                      navigate(`/payments/make-payment?loanId=${selectedNotification.related_id}&amount=${selectedNotification.related_data?.amount || 0}`)
+                    }}
+                  >
+                    Make Payment
+                  </Button>
+                </div>
+              )}
+
+              {selectedNotification.type === "loan_approved" && (
+                <div className="flex justify-end mt-4">
+                  <Button 
+                    onClick={() => {
+                      setNotificationDetailOpen(false)
+                      navigate(`/agreement/${selectedNotification.related_id}`)
+                    }}
+                  >
+                    View Agreement
+                  </Button>
                 </div>
               )}
             </div>

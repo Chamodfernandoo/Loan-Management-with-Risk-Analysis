@@ -1,6 +1,6 @@
 import type React from "react"
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -40,14 +40,17 @@ const formSchema = locationSchema.merge(detailsSchema)
 
 type FormValues = z.infer<typeof formSchema>
 
-const CreateAdPage: React.FC = () => {
+const EditAdPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
   const [step, setStep] = useState<1 | 2>(1)
   const [photos, setPhotos] = useState<File[]>([])
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([])
+  const [existingPhotoUrls, setExistingPhotoUrls] = useState<string[]>([])
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,6 +69,50 @@ const CreateAdPage: React.FC = () => {
 
   const watchDistrict = form.watch("district")
 
+  // Fetch advertisement data
+  useEffect(() => {
+    const fetchAdData = async () => {
+      if (!id) return
+      
+      try {
+        setIsLoading(true)
+        const adData = await adService.getAd(id)
+        
+        // Set form values
+        form.setValue("district", adData.location.district)
+        form.setValue("city", adData.location.city)
+        form.setValue("shopName", adData.shop_name || adData.shopName)
+        form.setValue("lenderName", adData.lender_name || adData.lenderName)
+        form.setValue("contactNumber", adData.contact_number || adData.contactNumber)
+        form.setValue("description", adData.description)
+        form.setValue("interestRate", String(adData.interest_rate || adData.interestRate))
+        form.setValue("loanTypes", adData.loan_types || adData.loanTypes || [])
+        
+        // Set available cities based on district
+        if (adData.location.district) {
+          setAvailableCities(cities[adData.location.district] || [])
+        }
+        
+        // Set existing photos
+        if (adData.photos && adData.photos.length > 0) {
+          setExistingPhotoUrls(adData.photos)
+        }
+      } catch (error: any) {
+        console.error("Error fetching advertisement:", error)
+        toast({
+          title: "Failed to load advertisement",
+          description: error.response?.data?.detail || "There was an error loading the advertisement details.",
+          variant: "destructive"
+        })
+        navigate("/lender/ads/all-ads")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchAdData()
+  }, [id, form, navigate, toast])
+
   // Update available cities when district changes
   const onDistrictChange = (value: string) => {
     form.setValue("district", value)
@@ -78,10 +125,11 @@ const CreateAdPage: React.FC = () => {
     if (!files) return
 
     // Check if adding new photos would exceed the limit
-    if (photos.length + files.length > 4) {
+    const totalPhotos = existingPhotoUrls.length + photos.length + files.length
+    if (totalPhotos > 4) {
       toast({
         title: "Upload limit exceeded",
-        description: "You can only upload a maximum of 4 photos",
+        description: "You can only have a maximum of 4 photos",
         variant: "destructive",
       })
       return
@@ -119,6 +167,10 @@ const CreateAdPage: React.FC = () => {
     setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index))
   }
 
+  const removeExistingPhoto = (index: number) => {
+    setExistingPhotoUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
   const nextStep = async () => {
     // Validate step 1 fields
     if (step === 1) {
@@ -136,6 +188,8 @@ const CreateAdPage: React.FC = () => {
   }
 
   const onSubmit = async (data: FormValues) => {
+    if (!id) return
+    
     try {
       setIsSubmitting(true)
       
@@ -160,26 +214,31 @@ const CreateAdPage: React.FC = () => {
         formData.append(`loan_types`, type)
       })
       
-      // Add photos
+      // Add existing photos if they weren't removed
+      if (existingPhotoUrls.length > 0) {
+        formData.append('existing_photos', JSON.stringify(existingPhotoUrls))
+      }
+      
+      // Add new photos
       photos.forEach((photo) => {
         formData.append(`photos`, photo)
       })
       
       // Submit to API
-      await adService.createAd(formData)
+      await adService.updateAd(id, formData)
       
       toast({
-        title: "Advertisement created",
-        description: "Your advertisement has been published successfully.",
+        title: "Advertisement updated",
+        description: "Your advertisement has been updated successfully.",
       })
       
-      // Redirect to the ads page
-      navigate("/lender/ads/all-ads")
+      // Redirect to the ad details page
+      navigate(`/lender/ads/${id}`)
     } catch (error: any) {
-      console.error("Error creating advertisement:", error)
+      console.error("Error updating advertisement:", error)
       toast({
-        title: "Failed to create advertisement",
-        description: error.response?.data?.detail || "There was an error creating your advertisement.",
+        title: "Failed to update advertisement",
+        description: error.response?.data?.detail || "There was an error updating your advertisement.",
         variant: "destructive",
       })
     } finally {
@@ -187,11 +246,19 @@ const CreateAdPage: React.FC = () => {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-3xl">
       <Card className="shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600">Create New Ad</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600">Edit Advertisement</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -213,7 +280,7 @@ const CreateAdPage: React.FC = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>District</FormLabel>
-                        <Select onValueChange={onDistrictChange} defaultValue={field.value}>
+                        <Select onValueChange={onDistrictChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select district" />
@@ -238,7 +305,7 @@ const CreateAdPage: React.FC = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>City</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!watchDistrict}>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!watchDistrict}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select city" />
@@ -389,26 +456,64 @@ const CreateAdPage: React.FC = () => {
 
                   <div className="space-y-2">
                     <FormLabel>Photos (Max 4)</FormLabel>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {photoPreviewUrls.map((photoUrl, index) => (
-                        <div key={index} className="relative h-24 bg-gray-100 rounded-md overflow-hidden">
-                          <img
-                            src={photoUrl}
-                            alt={`Photo ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-1 right-1 h-6 w-6"
-                            onClick={() => removePhoto(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                    
+                    {/* Existing photos */}
+                    {existingPhotoUrls.length > 0 && (
+                      <>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Existing Photos</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          {existingPhotoUrls.map((photoUrl, index) => (
+                            <div key={`existing-${index}`} className="relative h-24 bg-gray-100 rounded-md overflow-hidden">
+                              <img
+                                src={photoUrl}
+                                alt={`Existing Photo ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6"
+                                onClick={() => removeExistingPhoto(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                      {photoPreviewUrls.length < 4 && (
+                      </>
+                    )}
+                    
+                    {/* New photos */}
+                    {photoPreviewUrls.length > 0 && (
+                      <>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">New Photos</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          {photoPreviewUrls.map((photoUrl, index) => (
+                            <div key={`new-${index}`} className="relative h-24 bg-gray-100 rounded-md overflow-hidden">
+                              <img
+                                src={photoUrl}
+                                alt={`New Photo ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6"
+                                onClick={() => removePhoto(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Upload new photos */}
+                    {(existingPhotoUrls.length + photoPreviewUrls.length) < 4 && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
                           <Upload className="h-6 w-6 text-gray-400" />
                           <span className="mt-2 text-sm text-gray-500">Upload Photo</span>
@@ -417,11 +522,12 @@ const CreateAdPage: React.FC = () => {
                             accept="image/*"
                             className="hidden"
                             onChange={handlePhotoUpload}
-                            multiple={photoPreviewUrls.length < 3}
+                            multiple={(existingPhotoUrls.length + photoPreviewUrls.length) < 3}
                           />
                         </label>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                    
                     <FormDescription>Upload up to 4 photos of your business.</FormDescription>
                   </div>
 
@@ -431,7 +537,7 @@ const CreateAdPage: React.FC = () => {
                       Previous Step
                     </Button>
                     <Button type="submit" className="order-1 sm:order-2" disabled={isSubmitting}>
-                      {isSubmitting ? "Creating..." : "Create Ad"}
+                      {isSubmitting ? "Updating..." : "Update Ad"}
                     </Button>
                   </div>
                 </TabsContent>
@@ -444,4 +550,4 @@ const CreateAdPage: React.FC = () => {
   )
 }
 
-export default CreateAdPage
+export default EditAdPage

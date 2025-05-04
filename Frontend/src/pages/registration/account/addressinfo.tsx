@@ -100,6 +100,13 @@ const Addressinfo = ({ onDataChange }: AddressInfoProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
+    defaultValues: {
+      province: "",
+      district: "",
+      city: "",
+      address: "",
+      postalCode: ""
+    }
   })
 
   const onProvinceChange = React.useCallback(
@@ -109,7 +116,6 @@ const Addressinfo = ({ onDataChange }: AddressInfoProps) => {
     },
     [form],
   )
-
   // Watch for form changes and notify parent when valid
   const formValues = form.watch()
   const isValid = form.formState.isValid

@@ -129,18 +129,17 @@ export const columns: ColumnDef<Loan>[] = [
       return (
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/invoice`}>
+            <Link to={`/invoice/${loan.id}`}>
               <FileText className="mr-2 h-4 w-4" />
               View Invoice
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/customers/${loan.id}`}>
+            <Link to={`/agreement/${loan.id}`} state={{ viewOnly: true, loanId: loan.id }}>
               <Eye className="mr-2 h-4 w-4" />
               Agreement
             </Link>
           </Button>
-          
         </div>
       )
     },

@@ -115,11 +115,9 @@ export const BorrowedLoanColumns: ColumnDef<BorrowedLoan>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const loan = row.original
-
       return (
         <Button asChild size="sm" variant="outline">
-          <Link to={`/borrower/loans/${loan.id}`}>
+          <Link to="/borrower/loans">
             <Eye className="h-4 w-4 mr-1" />
             View
           </Link>
@@ -191,7 +189,19 @@ export const UpcomingPaymentColumns: ColumnDef<UpcomingPayment>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      return <Button size="sm">Pay Now</Button>
+      const payment = row.original
+    
+      return (
+        <Button 
+          size="sm"
+          onClick={() => {
+            // Use react-router's navigate in component
+            window.location.href = `/payments/make-payment?loanId=${payment.loanId}&amount=${payment.amount}`
+          }}
+        >
+          Pay Now
+        </Button>
+      )
     },
   },
 ]

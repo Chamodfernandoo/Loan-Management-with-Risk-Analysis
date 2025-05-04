@@ -1,10 +1,11 @@
-import React from "react"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { Stepper, StepperItem, StepperIndicator, StepperTitle, StepperSeparator } from "../../components/ui/stepper"
 import { Button } from "../../components/ui/button"
 import { Alert, AlertDescription } from "../../components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
+import { authService } from "../../services/api"
+import { useToast } from "../../components/ui/use-toast"
 
 // Import components from your existing file structure
 import Phoneno from "./phonenumber/phoneno"
@@ -26,9 +27,11 @@ interface StepData {
   [key: string]: any
 }
 
-export default function RegistrationPage() {
+const RegistrationPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0)
   const [userType, setUserType] = useState<"lender" | "customer" | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   interface FormDataType {
     phone: { phoneNumber?: string; userType?: "lender" | "customer" } & Record<string, any>
@@ -105,19 +108,116 @@ export default function RegistrationPage() {
     setIsNextDisabled(true)
   }, [activeStep])
 
-  const handleNext = () => {
-    const maxStep = userType === "lender" ? 4 : 5
+  const handleNext = async () => {
+    const maxStep = userType === "lender" ? 3 : 5;
 
     if (activeStep < maxStep) {
-      setActiveStep(activeStep + 1)
+      setActiveStep(activeStep + 1);
     } else {
       // On final step submission
-      setShowSuccess(true)
-
-      // Redirect to login page after 2 seconds
-      setTimeout(() => {
-        navigate("/login")
-      }, 2000)
+      setIsSubmitting(true);
+      
+      try {
+        // Process uploaded files first if there are any
+        let documentUploads: File[] = [];
+        if (formData.upload && formData.upload.frontSide && formData.upload.backSide) {
+          // Extract files from FileList objects
+          const frontFile = formData.upload.frontSide[0];
+          const backFile = formData.upload.backSide[0];
+          
+          if (frontFile && backFile) {
+            documentUploads = [frontFile, backFile];
+          }
+        }
+        
+        // Format date properly for ISO string
+        let formattedDateOfBirth = null;
+        if (formData.personal.dateOfBirth) {
+          formattedDateOfBirth = formData.personal.dateOfBirth instanceof Date 
+            ? formData.personal.dateOfBirth.toISOString().split('T')[0]
+            : new Date(formData.personal.dateOfBirth).toISOString().split('T')[0];
+        }
+        
+        // Create full name from first and last name
+        const fullName = `${formData.personal.firstName} ${formData.personal.lastName}`;
+        
+        // Prepare registration data in exact format expected by backend
+        const registrationData = {
+          email: formData.personal.email,
+          password: formData.personal.password,
+          phone_number: formData.phone.phoneNumber,
+          full_name: fullName,
+          role: formData.phone.userType === "customer" ? "borrower" : "lender", 
+          terms_accepted: true,
+          
+          // Optional fields - properly formatted to match backend expectations
+          nic_number: formData.personal.nicNumber || null,
+          gender: formData.personal.gender || null,
+          date_of_birth: formattedDateOfBirth,
+          marital_status: formData.personal.maritalStatus || null,
+          housing_status: formData.personal.housingStatus || null,
+          job_title: formData.personal.jobTitle || null,
+          monthly_income: formData.personal.monthlyIncome ? 
+            parseFloat(formData.personal.monthlyIncome) : null,
+          
+          // Format address as expected by the backend
+          address: formData.address && Object.keys(formData.address).length > 0 ? {
+            province: formData.address.province || "",
+            district: formData.address.district || "",
+            city: formData.address.city || "",
+            address: formData.address.address || "",
+            postal_code: formData.address.postalCode || ""
+          } : null,
+          
+          document_type: formData.docType?.documentType || null,
+          document_uploads: documentUploads,
+          
+          // Field for lender only
+          business_name: formData.phone.userType === "lender" ? formData.personal.shopName || "" : null
+        };
+        
+        // Log the data being sent
+        console.log("Registration data:", registrationData);
+        
+        // Send the registration request
+        const response = await authService.register(registrationData);
+        
+        toast({
+          title: "Registration successful!",
+          description: "Your account has been created. Redirecting to login...",
+          variant: "default",
+        });
+        
+        setShowSuccess(true);
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      } catch (error: any) {
+        console.error("Registration error:", error);
+        
+        // Enhanced error handling with better formatting
+        let errorMessage = "Registration failed. Please check your information and try again.";
+        
+        if (error.response?.data?.detail) {
+          if (Array.isArray(error.response.data.detail)) {
+            // Format validation errors from array
+            errorMessage = error.response.data.detail
+              .map((err: any) => `${err.loc[1]}: ${err.msg}`)
+              .join("\n");
+          } else {
+            // Single error message
+            errorMessage = error.response.data.detail;
+          }
+        }
+        
+        toast({
+          title: "Registration failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {        
+        setIsSubmitting(false);
+      }
     }
   }
 
@@ -127,17 +227,24 @@ export default function RegistrationPage() {
     }
   }
 
-  const handleDataChange = (data: any) => {
-    setCurrentStepData(data)
-  }
+  // Memoized handleDataChange function to prevent infinite loops
+  const handleDataChange = useCallback((data: any) => {
+    setCurrentStepData(prevData => {
+      // Only update if data has actually changed
+      if (JSON.stringify(prevData) !== JSON.stringify(data)) {
+        return data;
+      }
+      return prevData;
+    });
+  }, []);
 
   // Handle terms and conditions change specifically
-  const handleTermsChange = (accepted: boolean) => {
+  const handleTermsChange = useCallback((accepted: boolean) => {
     setCurrentStepData({ accepted })
-  }
+  }, []);
 
   // Determine if the next button should be disabled
-  const isLastStep = userType === "lender" ? activeStep === 4 : activeStep === 5
+  const isLastStep = userType === "lender" ? activeStep === 3 : activeStep === 5
   const nextButtonDisabled = isNextDisabled || (isLastStep && !formData.termsAccepted)
 
   // Render the current step component
@@ -172,6 +279,7 @@ export default function RegistrationPage() {
         return null
     }
   }
+
   // Get steps based on user type
   const getSteps = () => {
     if (userType === "lender") {
@@ -229,11 +337,13 @@ export default function RegistrationPage() {
             </Button>
           )}
 
-          <Button className="ml-auto" onClick={handleNext} disabled={nextButtonDisabled}>
-            {isLastStep ? "Submit" : "Next"}
+          <Button className="ml-auto" onClick={handleNext} disabled={nextButtonDisabled || isSubmitting}>
+            {isLastStep ? (isSubmitting ? "Submitting..." : "Submit") : "Next"}
           </Button>
         </div>
       </div>
     </div>
   )
 }
+
+export default RegistrationPage

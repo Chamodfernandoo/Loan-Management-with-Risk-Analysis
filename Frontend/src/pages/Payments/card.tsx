@@ -1,24 +1,11 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { CreditCard, Plus, Trash2, MoreVertical, Edit, Star, StarOff } from "lucide-react"
-
+import { useState, useEffect } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
+import { ArrowLeft, Plus, Trash, CreditCard, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { paymentService } from "@/services/api"
+import { useToast } from "@/hooks/use-toast"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
 // Card interface
 interface PaymentCard {
@@ -32,219 +19,216 @@ interface PaymentCard {
   nickname?: string
 }
 
-// Sample cards data
-const sampleCards: PaymentCard[] = [
-  {
-    id: "card-1",
-    cardNumber: "4111111111111111",
-    cardholderName: "John Smith",
-    expiryMonth: "12",
-    expiryYear: "2025",
-    cardType: "visa",
-    isDefault: true,
-    nickname: "Personal Card",
-  },
-  {
-    id: "card-2",
-    cardNumber: "5555555555554444",
-    cardholderName: "John Smith",
-    expiryMonth: "06",
-    expiryYear: "2026",
-    cardType: "mastercard",
-    isDefault: false,
-    nickname: "Business Card",
-  },
-  {
-    id: "card-3",
-    cardNumber: "378282246310005",
-    cardholderName: "John Smith",
-    expiryMonth: "09",
-    expiryYear: "2024",
-    cardType: "amex",
-    isDefault: false,
-  },
-]
-
 export default function CardsPage() {
   const navigate = useNavigate()
-  const [cards, setCards] = useState<PaymentCard[]>(sampleCards)
-  const [cardToDelete, setCardToDelete] = useState<PaymentCard | null>(null)
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const location = useLocation()
+  const { toast } = useToast()
+  const [cards, setCards] = useState<PaymentCard[]>([])
+  const [loading, setLoading] = useState(true)
+  const [deleteInProgress, setDeleteInProgress] = useState<string | null>(null)
+  
+  // Get return URL from location state if available
+  const returnUrl = location.state?.returnUrl
+  const loanId = location.state?.loanId
+  const loanData = location.state?.loanData
 
-  // Set card as default
-  const setDefaultCard = (cardId: string) => {
-    setCards(
-      cards.map((card) => ({
-        ...card,
-        isDefault: card.id === cardId,
-      })),
-    )
+  // Fetch cards on component mount
+  useEffect(() => {
+    const fetchCards = async () => {
+      setLoading(true)
+      try {
+        const cardsData = await paymentService.getCards()
+        setCards(Array.isArray(cardsData) ? cardsData : [])
+      } catch (error) {
+        console.error("Error fetching cards:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load your payment cards.",
+          variant: "destructive",
+        })
+        setCards([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCards()
+  }, [toast])
+
+  // Handle adding a new card
+  const handleAddCard = () => {
+    navigate("/payments/add-card", { 
+      state: { 
+        returnUrl: "/payments/cards",
+        loanId,
+        loanData 
+      } 
+    })
   }
 
-  // Delete card
-  const deleteCard = () => {
-    if (cardToDelete) {
-      setCards(cards.filter((card) => card.id !== cardToDelete.id))
-      setCardToDelete(null)
-      setConfirmDeleteOpen(false)
+  // Handle deleting a card
+  const handleDeleteCard = async (cardId: string) => {
+    setDeleteInProgress(cardId)
+    try {
+      await paymentService.deleteCard(cardId)
+      setCards(cards.filter(card => card.id !== cardId))
+      toast({
+        title: "Card deleted",
+        description: "Your card has been deleted successfully.",
+      })
+    } catch (error) {
+      console.error("Error deleting card:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete card. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleteInProgress(null)
     }
   }
 
-  // Open delete confirmation
-  const openDeleteConfirmation = (card: PaymentCard) => {
-    setCardToDelete(card)
-    setConfirmDeleteOpen(true)
+  // Get card type icon/text
+  const getCardTypeDisplay = (cardType: string) => {
+    switch (cardType) {
+      case "visa":
+        return {
+          text: "VISA",
+          className: "text-blue-600 font-bold"
+        }
+      case "mastercard":
+        return {
+          text: "MASTERCARD",
+          className: "text-red-600 font-bold"
+        }
+      case "amex":
+        return {
+          text: "AMEX",
+          className: "text-blue-800 font-bold"
+        }
+      case "discover":
+        return {
+          text: "DISCOVER",
+          className: "text-orange-600 font-bold"
+        }
+      default:
+        return {
+          text: "CARD",
+          className: "text-gray-600 font-bold"
+        }
+    }
+  }
+
+  // Go back to payment page if applicable
+  const handleReturn = () => {
+    const returnUrl = location.state?.returnUrl || "/borrower"
+    navigate(returnUrl, { 
+      state: { 
+        loanId: location.state?.loanId,
+        amount: location.state?.amount,
+        loanData: location.state?.loanData
+      }
+    })
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
-      <div className="flex items-center mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Payment Cards</h1>
+    <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <Button variant="outline" className="mr-4" onClick={handleReturn}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold">Your Payment Cards</h1>
+        </div>
+        <Button onClick={handleAddCard}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Card
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>Your Payment Cards</CardTitle>
-              <CardDescription>Manage your saved payment cards</CardDescription>
-            </div>
-            <Button onClick={() => navigate("/payments/add-card")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Card
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {cards.length === 0 ? (
-            <div className="text-center py-12">
-              <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-medium">No cards added yet</h3>
-              <p className="text-muted-foreground mb-4">Add a payment card to make payments</p>
-              <Button onClick={() => navigate("/payments/add-card")}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Card
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {cards.map((card) => (
-                <div key={card.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading your cards...</span>
+        </div>
+      ) : cards.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => {
+            const cardType = getCardTypeDisplay(card.cardType)
+            
+            return (
+              <Card key={card.id} className={card.isDefault ? "border-primary" : ""}>
+                <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-center">
-                      <div className="mr-3">
-                        <div className="w-12 h-8 bg-gray-100 rounded flex items-center justify-center">
-                          {card.cardType === "visa" && <span className="text-blue-600 font-bold text-sm">VISA</span>}
-                          {card.cardType === "mastercard" && <span className="text-red-600 font-bold text-sm">MC</span>}
-                          {card.cardType === "amex" && <span className="text-blue-800 font-bold text-sm">AMEX</span>}
-                          {card.cardType === "discover" && 
-                            <span className="text-orange-600 font-bold text-sm">DISC</span>
-                          }
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center">
-                          <span className="font-medium">•••• {card.cardNumber.slice(-4)}</span>
-                          {card.isDefault && (
-                            <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                              Default
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {card.nickname || card.cardholderName} • Expires {card.expiryMonth}/
-                          {card.expiryYear.slice(-2)}
-                        </div>
-                      </div>
+                    <div>
+                      <CardTitle className="flex items-center">
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        <span className={cardType.className}>{cardType.text}</span>
+                      </CardTitle>
+                      <CardDescription>
+                        {card.nickname || `Card ending in ${card.cardNumber.slice(-4)}`}
+                      </CardDescription>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {!card.isDefault && (
-                          <DropdownMenuItem onClick={() => setDefaultCard(card.id)}>
-                            <Star className="h-4 w-4 mr-2" />
-                            Set as Default
-                          </DropdownMenuItem>
-                        )}
-                        {card.isDefault && (
-                          <DropdownMenuItem disabled>
-                            <StarOff className="h-4 w-4 mr-2" />
-                            Default Card
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => navigate(`/payments/edit-card/${card.id}`)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Card
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => openDeleteConfirmation(card)}
-                          disabled={card.isDefault && cards.length > 1}
-                          className="text-red-600"
+                    {card.isDefault && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm space-y-1">
+                    <div className="font-medium">•••• •••• •••• {card.cardNumber.slice(-4)}</div>
+                    <div className="text-muted-foreground">{card.cardholderName}</div>
+                    <div className="text-muted-foreground">Expires {card.expiryMonth}/{card.expiryYear.slice(-2)}</div>
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-0">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700">
+                        <Trash className="h-4 w-4 mr-2" />
+                        {deleteInProgress === card.id ? "Deleting..." : "Delete Card"}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete your card ending in {card.cardNumber.slice(-4)}.
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handleDeleteCard(card.id)}
+                          className="bg-red-500 hover:bg-red-600"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Card
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between border-t pt-6">
-          <Button onClick={() => navigate("/payments/make-payment")}>Make a Payment</Button>
-        </CardFooter>
-      </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Card</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this card? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {cardToDelete && (
-            <div className="bg-muted p-4 rounded-lg my-2">
-              <div className="flex items-center">
-                <div className="mr-3">
-                  <div className="w-10 h-6 bg-gray-100 rounded flex items-center justify-center">
-                    {cardToDelete.cardType === "visa" && <span className="text-blue-600 font-bold text-xs">VISA</span>}
-                    {cardToDelete.cardType === "mastercard" && (
-                      <span className="text-red-600 font-bold text-xs">MC</span>
-                    )}
-                    {cardToDelete.cardType === "amex" && <span className="text-blue-800 font-bold text-xs">AMEX</span>}
-                    {cardToDelete.cardType === "discover" && (
-                      <span className="text-orange-600 font-bold text-xs">DISC</span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium">•••• {cardToDelete.cardNumber.slice(-4)}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {cardToDelete.nickname || cardToDelete.cardholderName}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)}>
-              Cancel
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardFooter>
+              </Card>
+            )
+          })}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-10">
+            <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">No Payment Cards</h3>
+            <p className="text-muted-foreground mb-6">You haven't added any payment cards yet.</p>
+            <Button onClick={handleAddCard}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Card
             </Button>
-            <Button variant="destructive" onClick={deleteCard}>
-              Delete Card
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

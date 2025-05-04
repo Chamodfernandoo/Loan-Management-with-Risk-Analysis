@@ -8,12 +8,145 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { useState, useEffect } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { authService } from '../services/api'
+import { useAuth } from '../context/AuthContext'
+
+// Clear potentially invalid authentication tokens
+if (localStorage.getItem('token')) {
+  try {
+    // Only keep token if it's valid JWT format
+    const token = localStorage.getItem('token');
+    const parts = token?.split('.');
+    if (!parts || parts.length !== 3) {
+      console.warn("Removing invalid token format");
+      localStorage.removeItem('token');
+    }
+  } catch (e) {
+    console.warn("Error parsing token, removing it");
+    localStorage.removeItem('token');
+  }
+}
+
+const formSchema = z.object({
+  username: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+// Admin credentials - hardcoded
+const ADMIN_EMAIL = "admin@gmail.com";
+const ADMIN_PASSWORD = "admin";
 
 const Login = () => {
-  const form = useForm()
-  const onSubmit = (data: any) => {
-    console.log(data);
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+
+  // Check if user is already logged in and redirect if needed
+  useEffect(() => {
+    console.log("🔎 Login component mounted - checking for existing session");
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.log("❌ No token found, staying on login page");
+      return;
+    }
+    
+    const checkAuth = async () => {
+      console.log("🔄 Checking existing authentication");
+      try {
+        const user = await authService.getCurrentUser();
+        console.log("✅ User already authenticated:", user);
+        
+        // Navigate based on role with replace to avoid history stack issues
+        if (user.role === "borrower") {
+          console.log("🧭 Redirecting to borrower dashboard");
+          navigate("/borrower", { replace: true });
+        } else if (user.role === "lender") {
+          console.log("🧭 Redirecting to lender dashboard");
+          navigate("/lender", { replace: true });
+        } else if (user.role === "admin") {
+          console.log("🧭 Redirecting to admin dashboard");
+          navigate("/admin", { replace: true });
+        } else {
+          console.warn('⚠️ Unknown user role:', user.role);
+        }
+      } catch (error) {
+        console.error("❌ Authentication check error:", error);
+        localStorage.removeItem('token');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Check for admin credentials
+      if (data.username === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
+        console.log("✅ Admin login detected");
+        
+        // Create a mock token for admin
+        const adminToken = "admin-mock-token";
+        localStorage.setItem('token', adminToken);
+        
+        // Create a mock admin user in the auth context
+        await login(adminToken, {
+          id: "admin-id",
+          email: ADMIN_EMAIL,
+          role: "admin",
+          full_name: "System Administrator",
+          is_active: true
+        });
+        
+        // Navigate to admin dashboard
+        navigate("/admin", { replace: true });
+        return;
+      }
+      
+      // Regular user login flow
+      // 1. Login and get token
+      const response = await authService.login(data.username, data.password);
+      
+      // 2. Use the auth context's login function which updates auth state
+      await login(response.access_token);
+      
+      // 3. Fetch user profile
+      const userProfile = await authService.getCurrentUser();
+      
+      // 4. Redirect based on role
+      if (userProfile.role === "borrower") {
+        navigate("/borrower", { replace: true });
+      } else if (userProfile.role === "lender") {
+        navigate("/lender", { replace: true });
+      } else if (userProfile.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/");
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.detail || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+  
 
   return (
     <>
@@ -29,12 +162,10 @@ const Login = () => {
                 <div className="text-xl lg:text-2xl font-medium text-gray-900">
                   <h2>Welcome!<br/>
                     <span className="">Simplify your</span><br/> 
-                    <span className="">loan management with easy.</span> <br/>
+                    <span className="">loan management with ease.</span> <br/>
                     <span></span>
                   </h2>
                 </div>
-
-                
               </div>
               <div className="pt-4 md:pt-10">
                 <img src="/src/assets/lopic.png" alt="dashbord" className="rounded-2xl w-full h-[300px] md:h-[350px] lg:h-[450px] object-cover"></img>
@@ -57,6 +188,14 @@ const Login = () => {
               </div>
               <h2 className="text-sm lg:text-base text-gray-900">Let's sign you in</h2>
             </div>
+
+            {error && (
+              <div className="w-full px-4 sm:w-3/4 lg:w-1/2 mb-4">
+                <div className="bg-red-50 text-red-500 p-3 rounded text-sm">
+                  {error}
+                </div>
+              </div>
+            )}
 
             <div className="w-full px-4 sm:w-3/4 lg:w-1/2">
               <Form {...form}>
@@ -88,9 +227,16 @@ const Login = () => {
                   <div className="flex justify-center items-center">
                     <a href="#" className="text-sm text-blue-500">Forgot password?</a>
                   </div>
-                  <Button type="submit" className="w-full h-12 lg:h-14 bg-blue-600">Submit</Button>
+                  <Button type="submit" className="w-full h-12 lg:h-14 bg-blue-600" disabled={isLoading}>
+                    {isLoading ? "Logging in..." : "Submit"}
+                  </Button>
                 </form>
               </Form>
+            </div>
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Don't have an account? <a href="/register" className="text-blue-500 hover:text-blue-700">Register</a>
+              </p>
             </div>
             <div className="mt-20 lg:mt-36 text-[8px] sm:text-xs">
             </div>

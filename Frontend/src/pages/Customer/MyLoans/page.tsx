@@ -1,40 +1,90 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DataTable } from "@/components/default/data-table"
 import { columns, type Loan } from "@/pages/Customer/MyLoans/column"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-
-// Sample data
-const data: Loan[] = [
-  {id: "1",orderId: "ORD-001",shopName: "cham loans", createdAt: new Date("2023-01-15"),totalPrice: 5000, orderState: "paid",installmentState: "ok", },
-  {id: "2",orderId: "ORD-002",shopName: "cham loans",createdAt: new Date("2023-02-20"),totalPrice: 7500, orderState: "partial_paid",installmentState: "pending",},
-  {id: "3",orderId: "ORD-003",shopName: "Robert loans",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue",},
-  {id: "4",orderId: "ORD-004", shopName: "Emily loans", createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "pending",},
-  {id: "5",orderId: "ORD-005",shopName: "Michael loans",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
-  {id: "6",orderId: "ORD-006",shopName: "John loans",createdAt: new Date("2023-01-15"),totalPrice: 5000,orderState: "paid",installmentState: "ok",},
-  {id: "7",orderId: "ORD-007",shopName: "Jane loans",createdAt: new Date("2023-02-20"),totalPrice: 7500,orderState: "partial_paid",installmentState: "ok",},
-  {id: "8",orderId: "ORD-008",shopName: "Robert loans",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "overdue",},
-  {id: "9",orderId: "ORD-009",shopName: "Emily loans",createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "overdue",},
-  {id: "10",orderId: "ORD-010",shopName: "Michael loans",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
-  {id: "11",orderId: "ORD-011",shopName: "John loans",createdAt: new Date("2023-01-15"),totalPrice: 5000,orderState: "paid",installmentState: "ok",},
-  {id: "12",orderId: "ORD-012",shopName: "Jane loans",createdAt: new Date("2023-02-20"),totalPrice: 7500,orderState: "partial_paid",installmentState: "ok",},
-  {id: "13",orderId: "ORD-0013",shopName: "Robert loans",createdAt: new Date("2023-03-10"),totalPrice: 3200,orderState: "pending",installmentState: "pending", },
-  {id: "14",orderId: "ORD-014",shopName: "Emily Davis",createdAt: new Date("2023-04-05"),totalPrice: 9800,orderState: "partial_paid",installmentState: "overdue",},
-  {id: "15",orderId: "ORD-015",shopName: "Michael loans",createdAt: new Date("2023-05-12"),totalPrice: 6400,orderState: "paid",installmentState: "ok",},
-]
+import { loanService } from "@/services/api"
+import { useToast } from "@/hooks/use-toast"
 
 export default function MyLoanHistoryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  const [loans, setLoans] = useState<Loan[]>([])
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const { toast } = useToast()
+
+  // Fetch customer loans from API
+  useEffect(() => {
+    const fetchLoans = async () => {
+      setLoading(true)
+      try {
+        console.log("Fetching loans...")
+        const loansData = await loanService.getLoans()
+        console.log("Loans data received:", loansData)
+        
+        if (Array.isArray(loansData) && loansData.length > 0) {
+          // Transform API data to match Loan type
+          const formattedLoans = loansData.map((loan: any) => {
+            // Explicitly cast orderState to the allowed string literal type
+            let orderState: "paid" | "pending" | "partial_paid"
+            if (loan.status === "APPROVED") {
+              orderState = "partial_paid"
+            } else if (loan.status === "COMPLETED") {
+              orderState = "paid"
+            } else {
+              orderState = "pending"
+            }
+            
+            // Explicitly cast installmentState to the allowed string literal type
+            let installmentState: "ok" | "overdue" | "pending"
+            if (loan.payments && loan.payments.some((p: any) => p.status === "LATE" || p.status === "MISSED")) {
+              installmentState = "overdue"
+            } else if (loan.payments && loan.payments.some((p: any) => p.status === "PENDING")) {
+              installmentState = "pending"
+            } else {
+              installmentState = "ok"
+            }
+            
+            return {
+              id: loan._id,
+              orderId: `ORD-${loan._id.substring(0, 5)}`,
+              shopName: loan.lender_name || "Unknown Lender",
+              createdAt: new Date(loan.created_at || Date.now()),
+              totalPrice: loan.amount || 0,
+              orderState,
+              installmentState,
+            }
+          })
+          
+          setLoans(formattedLoans)
+        } else {
+          console.log("No loans found for this customer")
+          setLoans([])
+        }
+      } catch (error) {
+        console.error("Error fetching loans:", error)
+        toast({
+          title: "Error fetching loans",
+          description: "There was an error loading your loans. Please try again.",
+          variant: "destructive"
+        })
+        setLoans([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchLoans()
+  }, [toast])
 
   // Filter data based on search query and active tab
-  const filteredData = data.filter((loan) => {
+  const filteredData = loans.filter((loan) => {
     // Search filter
     const matchesSearch =
       searchQuery === "" ||
@@ -114,19 +164,54 @@ export default function MyLoanHistoryPage() {
             </TabsList>
 
             <TabsContent value="all" className="mt-6">
-              <DataTable columns={columns} data={filteredData} />
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Loading loans...</span>
+                </div>
+              ) : (
+                <DataTable columns={columns} data={filteredData} />
+              )}
             </TabsContent>
             <TabsContent value="partial_paid" className="mt-6">
-              <DataTable columns={columns} data={filteredData} />
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Loading loans...</span>
+                </div>
+              ) : (
+                <DataTable columns={columns} data={filteredData} />
+              )}
             </TabsContent>
             <TabsContent value="paid" className="mt-6">
-              <DataTable columns={columns} data={filteredData} />
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Loading loans...</span>
+                </div>
+              ) : (
+                <DataTable columns={columns} data={filteredData} />
+              )}
             </TabsContent>
             <TabsContent value="pending" className="mt-6">
-              <DataTable columns={columns} data={filteredData} />
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Loading loans...</span>
+                </div>
+              ) : (
+                <DataTable columns={columns} data={filteredData} />
+              )}
             </TabsContent>
             <TabsContent value="overdue" className="mt-6">
-              <DataTable columns={columns} data={filteredData} />
+              {loading ? (
+                <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Loading loans...</span>
+                </div>
+              ) : (
+                <DataTable columns={columns} data={filteredData} />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

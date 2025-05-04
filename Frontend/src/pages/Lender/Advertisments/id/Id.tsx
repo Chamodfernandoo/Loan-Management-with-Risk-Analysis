@@ -6,96 +6,107 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { ArrowLeft, BadgeCent, MapPin, Percent, Phone, Store, User } from "lucide-react"
-
-// Sample data - in a real app, this would come from your API
-const sampleAds: LenderAd[] = [
-  {
-    id: "1",
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2023-01-15"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "Capital Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options.",
-    photos: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600&text=Photo+2",
-      "/placeholder.svg?height=400&width=600&text=Photo+3",
-    ],
-    lenderId: "lender-1",
-    interestRate: 8.5,
-    loanTypes: ["Personal", "Business", "Home"],
-
-  },
-  {
-    id: "2",
-    createdAt: new Date("2023-02-20"),
-    updatedAt: new Date("2023-02-20"),
-    location: {
-      district: "Kandy",
-      city: "Kandy",
-    },
-    shopName: "Hill Country Finance",
-    lenderName: "Samantha Silva",
-    contactNumber: "071-9876543",
-    description:
-      "Specializing in small business loans and microfinance. Serving the Kandy region for over 10 years with trusted financial services.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-2",
-    interestRate: 9.0,
-    loanTypes: ["Business", "Microfinance"],
-  },
-  {
-    id: "4",
-    createdAt: new Date("2023-04-05"),
-    updatedAt: new Date("2023-04-05"),
-    location: {
-      district: "Kegalle",
-      city: "Kegalle",
-    },
-    shopName: "Sameera Finance",
-    lenderName: "Sameera Rathnayake",
-    contactNumber: "077-6653521",
-    description:
-      "Family-owned lending business offering personal loans, business loans, and installment plans. Trusted by the community for generations.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "current-lender-id",
-    interestRate: 7.5,
-    loanTypes: ["Personal", "Business", "Installment"],
-  },
-]
+import { ArrowLeft, BadgeCent, MapPin, Percent, Phone, Store, User, Trash2, Edit } from "lucide-react"
+import { adService } from "@/services/api"
+import { useToast } from "@/hooks/use-toast"
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const AdDetailPage: React.FC = () => {
   const params = useParams()
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [ad, setAd] = useState<LenderAd | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [loading, setLoading] = useState(true)
+  const [isOwner, setIsOwner] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    // In a real app, you would fetch the ad from your API
-    const adId = params.id as string
-    const foundAd = sampleAds.find((a) => a.id === adId)
-
-    if (foundAd) {
-      setAd(foundAd)
-      if (foundAd.photos.length > 0) {
-        setSelectedPhoto(foundAd.photos[0])
+    const fetchAdDetails = async () => {
+      try {
+        setLoading(true)
+        const adId = params.id as string
+        const adData = await adService.getAd(adId)
+        
+        // Format dates and handle API response format
+        const formattedAd = {
+          ...adData,
+          id: adData._id || adData.id,
+          createdAt: new Date(adData.created_at || adData.createdAt),
+          updatedAt: new Date(adData.updated_at || adData.updatedAt),
+          loanTypes: adData.loan_types || adData.loanTypes || [],
+          interestRate: adData.interest_rate || adData.interestRate || 0,
+          lenderId: adData.lender_id || adData.lenderId,
+          shopName: adData.shop_name || adData.shopName,
+          lenderName: adData.lender_name || adData.lenderName,
+          contactNumber: adData.contact_number || adData.contactNumber,
+        }
+        
+        setAd(formattedAd)
+        
+        // Check if the current user is the owner
+        setIsOwner(adData.is_owner || false)
+        
+        if (formattedAd.photos && formattedAd.photos.length > 0) {
+          setSelectedPhoto(formattedAd.photos[0])
+        }
+      } catch (error: any) {
+        console.error("Error fetching advertisement details:", error)
+        toast({
+          title: "Failed to load advertisement",
+          description: error.response?.data?.detail || "There was an error loading the advertisement details.",
+          variant: "destructive"
+        })
+      } finally {
+        setLoading(false)
       }
     }
+    
+    fetchAdDetails()
+  }, [params.id, toast])
 
-    setLoading(false)
-  }, [params.id])
+  const handleDeleteAd = async () => {
+    if (!ad) return
+    
+    try {
+      setIsDeleting(true)
+      await adService.deleteAd(ad.id)
+      
+      toast({
+        title: "Advertisement deleted",
+        description: "Your advertisement has been deleted successfully.",
+      })
+      
+      navigate("/lender/ads/all-ads")
+    } catch (error: any) {
+      console.error("Error deleting advertisement:", error)
+      toast({
+        title: "Failed to delete advertisement",
+        description: error.response?.data?.detail || "There was an error deleting the advertisement.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+    }
+  }
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 flex justify-center items-center">Loading...</div>
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
     )
   }
 
@@ -113,14 +124,58 @@ const AdDetailPage: React.FC = () => {
     )
   }
 
-  const isOwner = ad.lenderId === "current-lender-id"
+  // Get loan types and interest rate, handling both camelCase and snake_case
+  const loanTypes = ad.loan_types || ad.loanTypes || []
+  const interestRate = ad.interest_rate || ad.interestRate || 0
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-4xl">
-      <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back
-      </Button>
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        {isOwner && (
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/lender/ads/edit/${ad.id}`)}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+            
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your
+                    advertisement and remove it from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAd}
+                    className="bg-destructive text-destructive-foreground"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+      </div>
 
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
@@ -150,7 +205,7 @@ const AdDetailPage: React.FC = () => {
               )}
             </div>
 
-            {ad.photos.length > 1 && (
+            {ad.photos && ad.photos.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {ad.photos.map((photo, index) => (
                   <div
@@ -192,14 +247,16 @@ const AdDetailPage: React.FC = () => {
               <div className="flex items-center text-xs sm:text-sm">
                 <Percent className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
                 <span className="text-muted-foreground">Interest:</span>
-                <span className="ml-1 font-medium">{ad.interestRate}</span>
-            </div>
-                <div className="flex items-center text-xs sm:text-sm">
-                  <BadgeCent className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-2" />
-                  <span className="text-muted-foreground">Loan Type:</span>
-                  <span className="ml-1 font-medium">{ad.loanTypes}</span>
+                <span className="ml-1 font-medium">{interestRate}%</span>
               </div>
-
+              <div>
+                <h3 className="text-lg font-semibold">Loan Types</h3>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {loanTypes.map((type, index) => (
+                    <Badge key={index} variant="outline">{type}</Badge>
+                  ))}
+                </div>
+              </div>
               <div>
                 <h3 className="text-lg font-semibold">Description</h3>
                 <p className="mt-2 text-muted-foreground">{ad.description}</p>
@@ -227,6 +284,10 @@ const AdDetailPage: React.FC = () => {
                   <div className="flex">
                     <span className="text-muted-foreground w-20">Posted on:</span>
                     <span>{format(ad.createdAt, "MMMM dd, yyyy")}</span>
+                  </div>
+                  <div className="flex">
+                    <span className="text-muted-foreground w-20">Updated:</span>
+                    <span>{format(ad.updatedAt, "MMMM dd, yyyy")}</span>
                   </div>
                   <div className="flex">
                     <span className="text-muted-foreground w-20">Ad ID:</span>

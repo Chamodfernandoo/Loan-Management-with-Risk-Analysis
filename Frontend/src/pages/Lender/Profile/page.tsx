@@ -1,10 +1,12 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
 import { Eye, EyeOff, LogOut, MapPin, Phone, Mail, Edit, Save, X, Shield, Store } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { useToast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -23,33 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
-// Sample lender data
-const lenderData = {
-  firstName: "Sameera",
-  lastName: "Rathnayake",
-  email: "sameera@example.com",
-  phoneNumber: "077-6653521",
-  dateOfBirth: new Date("1985-05-15"),
-  gender: "male",
-  nicNumber: "198515601234",
-  shopName: "Sameera Finance",
-  businessRegistrationNumber: "BR12345678",
-  address: {
-    province: "Western Province",
-    district: "Kegalle",
-    city: "Kegalle",
-    address: "190/3 Alavita Kegalle",
-    postalCode: "71000",
-  },
-  documentVerification: {
-    status: "verified",
-    documentType: "id-card",
-    verifiedDate: new Date("2023-01-10"),
-  },
-  joinedDate: new Date("2023-01-01"),
-  profileImage: "/placeholder.svg?height=100&width=100",
-}
+import { userService, authService } from "@/services/api"
 
 // Form schema for personal info
 const personalInfoSchema = z.object({
@@ -73,26 +49,78 @@ const passwordSchema = z
     path: ["confirmPassword"],
   })
 
+// Form schema for address update
+const addressSchema = z.object({
+  province: z.string().min(2, "Province is required"),
+  district: z.string().min(2, "District is required"),
+  city: z.string().min(2, "City is required"),
+  address: z.string().min(5, "Address is required"),
+  postalCode: z.string().min(5, "Postal code is required"),
+})
+
 export default function LenderProfilePage() {
   const navigate = useNavigate()
+  const { logout } = useAuth()
+  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const [isEditingAddress, setIsEditingAddress] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false)
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false)
+  const [addressUpdateSuccess, setAddressUpdateSuccess] = useState(false)
+  const [userData, setUserData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const data = await userService.getLenderProfile()
+        setUserData(data)
+        
+        // Initialize form with user data
+        personalInfoForm.reset({
+          firstName: data.full_name?.split(' ')[0] || '',
+          lastName: data.full_name?.split(' ').slice(1).join(' ') || '',
+          email: data.email || '',
+          phoneNumber: data.phone_number || '',
+          shopName: data.business_name || data.lender_profile?.business_name || '',
+          businessRegistrationNumber: data.business_registration_number || data.lender_profile?.business_registration_number || '',
+        })
+        
+        // Initialize address form if address exists
+        if (data.address) {
+          addressForm.reset({
+            province: data.address.province || '',
+            district: data.address.district || '',
+            city: data.address.city || '',
+            address: data.address.address || '',
+            postalCode: data.address.postal_code || '',
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [])
 
   // Personal info form
   const personalInfoForm = useForm<z.infer<typeof personalInfoSchema>>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
-      firstName: lenderData.firstName,
-      lastName: lenderData.lastName,
-      email: lenderData.email,
-      phoneNumber: lenderData.phoneNumber,
-      shopName: lenderData.shopName,
-      businessRegistrationNumber: lenderData.businessRegistrationNumber,
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: '',
+      shopName: '',
+      businessRegistrationNumber: '',
     },
   })
 
@@ -105,35 +133,153 @@ export default function LenderProfilePage() {
       confirmPassword: "",
     },
   })
+  
+  // Address form
+  const addressForm = useForm<z.infer<typeof addressSchema>>({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      province: '',
+      district: '',
+      city: '',
+      address: '',
+      postalCode: '',
+    },
+  })
+
+  // Define a user data interface at the top of the file
+  interface UserData {
+    full_name?: string
+    email?: string
+    phone_number?: string
+    business_name?: string
+    business_registration_number?: string
+    address?: {
+      province: string
+      district: string
+      city: string
+      address: string
+      postalCode: string
+    }
+    is_verified?: boolean
+    verified_at?: string
+    document_type?: string
+    created_at?: string
+    updated_at?: string
+    nic_number?: string
+    is_active?: boolean
+    lender_profile?: any
+    [key: string]: any; // For other potential properties
+  }
 
   // Handle personal info form submission
-  function onPersonalInfoSubmit(values: z.infer<typeof personalInfoSchema>) {
-    console.log("Updated personal info:", values)
-    // Here you would typically send the data to your backend
-    setIsEditing(false)
-    setProfileUpdateSuccess(true)
-    setTimeout(() => setProfileUpdateSuccess(false), 3000)
+  async function onPersonalInfoSubmit(values: z.infer<typeof personalInfoSchema>) {
+    try {
+      const fullName = `${values.firstName} ${values.lastName}`
+      
+      // Update user profile with name, email and phone
+      await userService.updateProfile({
+        full_name: fullName,
+        email: values.email,
+        phone_number: values.phoneNumber,
+        business_name: values.shopName,
+        business_registration_number: values.businessRegistrationNumber
+      })
+      
+      // Update state with new values
+      setUserData((prevData: UserData | null) => ({
+        ...prevData as UserData,
+        full_name: fullName,
+        email: values.email,
+        phone_number: values.phoneNumber,
+        business_name: values.shopName,
+        business_registration_number: values.businessRegistrationNumber
+      }))
+      
+      setIsEditing(false)
+      setProfileUpdateSuccess(true)
+      setTimeout(() => setProfileUpdateSuccess(false), 3000)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      // Handle error (show error message)
+    }
+  }
+
+  // Handle address form submission
+  async function onAddressSubmit(values: z.infer<typeof addressSchema>) {
+    try {
+      // Update address
+      await userService.updateAddress(values)
+      
+      // Update state with new values
+      setUserData((prevData: UserData | null) => ({
+        ...prevData as UserData,
+        address: values
+      }))
+      
+      setIsEditingAddress(false)
+      setAddressUpdateSuccess(true)
+      setTimeout(() => setAddressUpdateSuccess(false), 3000)
+    } catch (error) {
+      console.error("Error updating address:", error)
+      // Handle error (show error message)
+    }
   }
 
   // Handle password change form submission
-  function onPasswordSubmit(values: z.infer<typeof passwordSchema>) {
-    console.log("Password change:", values)
-    // Here you would typically send the data to your backend
-    passwordForm.reset()
-    setPasswordChangeSuccess(true)
-    setTimeout(() => setPasswordChangeSuccess(false), 3000)
+  async function onPasswordSubmit(values: z.infer<typeof passwordSchema>) {
+    try {
+      await userService.changePassword({
+        current_password: values.currentPassword,
+        new_password: values.newPassword,
+        confirm_password: values.confirmPassword
+      })
+      
+      passwordForm.reset()
+      setPasswordChangeSuccess(true)
+      setTimeout(() => setPasswordChangeSuccess(false), 3000)
+    } catch (error) {
+      console.error("Error changing password:", error)
+      // Handle specific error cases
+    }
   }
 
   // Handle logout
   function handleLogout() {
-    console.log("Logging out...")
-    // Here you would typically clear auth tokens, etc.
-    navigate("/")
+    try {
+      logout()
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      })
+      navigate("/login")
+    } catch (error) {
+      console.error("Error during logout:", error)
+      toast({
+        title: "Logout failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!userData || !userData.full_name) return "LN"
+    
+    const nameParts = userData.full_name.split(" ")
+    if (nameParts.length >= 2) {
+      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
+    }
+    return nameParts[0].substring(0, 2).toUpperCase()
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading profile data...</div>
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-    <div className="container  py-8 px-4 sm:px-6">
+    <div className="container py-8 px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-blue-600">My Profile</h1>
         <Button variant="destructive" onClick={() => setLogoutDialogOpen(true)} className="sm:self-end">
@@ -149,6 +295,14 @@ export default function LenderProfilePage() {
           <AlertDescription>Your profile information has been updated successfully.</AlertDescription>
         </Alert>
       )}
+      
+      {addressUpdateSuccess && (
+        <Alert className="mb-6 bg-green-50 text-green-800 border-green-200">
+          <Shield className="h-4 w-4" />
+          <AlertTitle>Success!</AlertTitle>
+          <AlertDescription>Your address information has been updated successfully.</AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile Summary Card */}
@@ -156,14 +310,14 @@ export default function LenderProfilePage() {
           <CardHeader className="pb-4">
             <div className="flex flex-col items-center">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={lenderData.profileImage} alt={`${lenderData.firstName} ${lenderData.lastName}`} />
+                <AvatarImage src={userData?.profileImage} alt={userData?.full_name} />
                 <AvatarFallback>
                   <Store className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              <CardTitle className="text-xl text-center">{lenderData.shopName}</CardTitle>
+              <CardTitle className="text-xl text-center">{userData?.business_name || "Your Business"}</CardTitle>
               <CardDescription className="text-center">
-                {lenderData.firstName} {lenderData.lastName}
+                {userData?.full_name}
               </CardDescription>
             </div>
           </CardHeader>
@@ -172,26 +326,28 @@ export default function LenderProfilePage() {
               <div className="flex items-center">
                 <Badge className="bg-green-600 hover:bg-green-700">Lender</Badge>
                 <Badge className="ml-2 bg-blue-600 hover:bg-blue-700">
-                  {lenderData.documentVerification.status === "verified" ? "Verified" : "Unverified"}
+                  {userData?.is_verified ? "Verified" : "Unverified"}
                 </Badge>
               </div>
               <div className="flex items-center text-sm">
                 <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{lenderData.phoneNumber}</span>
+                <span>{userData?.phone_number}</span>
               </div>
               <div className="flex items-center text-sm">
                 <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{lenderData.email}</span>
+                <span>{userData?.email}</span>
               </div>
-              <div className="flex items-center text-sm">
-                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>
-                  {lenderData.address.city}, {lenderData.address.district}
-                </span>
-              </div>
+              {userData?.address && (
+                <div className="flex items-center text-sm">
+                  <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>
+                    {userData.address.city}, {userData.address.district}
+                  </span>
+                </div>
+              )}
               <Separator />
               <div className="text-sm text-muted-foreground">
-                Member since {format(lenderData.joinedDate, "MMMM yyyy")}
+                Member since {format(new Date(userData?.created_at || Date.now()), "MMMM yyyy")}
               </div>
             </div>
           </CardContent>
@@ -330,40 +486,39 @@ export default function LenderProfilePage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">First Name</h3>
-                          <p>{lenderData.firstName}</p>
+                          <p>{userData?.full_name?.split(' ')[0]}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Last Name</h3>
-                          <p>{lenderData.lastName}</p>
+                          <p>{userData?.full_name?.split(' ').slice(1).join(' ')}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                          <p>{lenderData.email}</p>
+                          <p>{userData?.email}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                       
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Phone Number</h3>
-                          <p>{lenderData.phoneNumber}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-muted-foreground">Date of Birth</h3>
-                          <p>{format(lenderData.dateOfBirth, "MMMM dd, yyyy")}</p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-muted-foreground">Gender</h3>
-                          <p className="capitalize">{lenderData.gender}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                          <h3 className="text-sm font-medium text-muted-foreground">NIC Number</h3>
-                          <p>{lenderData.nicNumber}</p>
+                          <p>{userData?.phone_number}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-muted-foreground">Shop Name</h3>
-                          <p>{lenderData.shopName}</p>
+                          <p>{userData?.business_name}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Business Registration</h3>
+                          <p>{userData?.business_registration_number || "Not provided"}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">NIC Number</h3>
+                          <p>{userData?.nic_number || "Not provided"}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Account Status</h3>
+                          <p>{userData?.is_active ? "Active" : "Inactive"}</p>
                         </div>
                       </div>
                     </div>
@@ -373,76 +528,175 @@ export default function LenderProfilePage() {
 
               <Card>
                 <CardHeader className="pb-2 text-blue-600">
-                  <CardTitle>Address Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Province</h3>
-                        <p>{lenderData.address.province}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">District</h3>
-                        <p>{lenderData.address.district}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">City</h3>
-                        <p>{lenderData.address.city}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Postal Code</h3>
-                        <p>{lenderData.address.postalCode}</p>
-                      </div>
-                      <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
-                            <p>{lenderData.address.address}</p>
-                        </div>
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Address Information</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => setIsEditingAddress(!isEditingAddress)}>
+                      {isEditingAddress ? (
+                        <>
+                          <X className="mr-2 h-4 w-4" />
+                          Cancel
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </>
+                      )}
+                    </Button>
                   </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Update Address
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2 text-blue-600">
-                  <CardTitle>Document Verification</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <Badge
-                        className={
-                          lenderData.documentVerification.status === "verified"
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-yellow-600 hover:bg-yellow-700"
-                        }
-                      >
-                        {lenderData.documentVerification.status === "verified" ? "Verified" : "Pending"}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Document Type</h3>
-                        <p className="capitalize">{lenderData.documentVerification.documentType.replace("-", " ")}</p>
-                      </div>
-                      {lenderData.documentVerification.status === "verified" && (
-                        <div>
-                          <h3 className="text-sm font-medium text-muted-foreground">Verified Date</h3>
-                          <p>{format(lenderData.documentVerification.verifiedDate, "MMMM dd, yyyy")}</p>
+                  {isEditingAddress ? (
+                    <Form {...addressForm}>
+                      <form onSubmit={addressForm.handleSubmit(onAddressSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <FormField
+                            control={addressForm.control}
+                            name="province"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Province</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={addressForm.control}
+                            name="district"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>District</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={addressForm.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>City</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FormField
+                            control={addressForm.control}
+                            name="address"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Street Address</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={addressForm.control}
+                            name="postalCode"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Postal Code</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <Button type="submit">
+                            <Save className="mr-2 h-4 w-4" />
+                            Save Address
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  ) : (
+                    <div className="space-y-4">
+                      {userData?.address ? (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground">Province</h3>
+                              <p>{userData.address.province}</p>
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground">District</h3>
+                              <p>{userData.address.district}</p>
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground">City</h3>
+                              <p>{userData.address.city}</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground">Postal Code</h3>
+                              <p>{userData.address.postal_code}</p>
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
+                              <p>{userData.address.address}</p>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">No address information available. Click Edit to add your address.</p>
                       )}
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {userData?.document_verification && (
+                <Card>
+                  <CardHeader className="pb-2 text-blue-600">
+                    <CardTitle>Document Verification</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center">
+                        <Badge
+                          className={
+                            userData?.is_verified
+                              ? "bg-green-600 hover:bg-green-700"
+                              : "bg-yellow-600 hover:bg-yellow-700"
+                          }
+                        >
+                          {userData?.is_verified ? "Verified" : "Pending"}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground">Document Type</h3>
+                          <p className="capitalize">{userData?.document_type || "Not specified"}</p>
+                        </div>
+                        {userData?.is_verified && userData?.verified_at && (
+                          <div>
+                            <h3 className="text-sm font-medium text-muted-foreground">Verified Date</h3>
+                            <p>{format(new Date(userData.verified_at), "MMMM dd, yyyy")}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Security Tab */}

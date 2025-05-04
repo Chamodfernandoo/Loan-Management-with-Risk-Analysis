@@ -9,7 +9,7 @@ export type Payment = {
   id: string
   date: Date
   amount: number
-  method: "cash" | "card" | "bank_transfer" | "cheque"
+  method: string
   status: "completed" | "pending" | "failed"
 }
 
@@ -43,38 +43,23 @@ export const columns: ColumnDef<Payment>[] = [
       const amount = Number.parseFloat(row.getValue("amount"))
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "LKR",
-        minimumFractionDigits: 2,
+        currency: "USD",
       }).format(amount)
       return <div className="font-medium">{formatted}</div>
     },
   },
   {
     accessorKey: "method",
-    header: ({ column }) => {
-      return (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Method
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
+    header: "Payment Method",
     cell: ({ row }) => {
       const method = row.getValue("method") as string
 
-      return <div className="capitalize">{method.replace("_", " ")}</div>
+      return <div className="capitalize">{method}</div>
     },
   },
   {
     accessorKey: "status",
-    header: ({ column }) => {
-      return (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
+    header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string
 

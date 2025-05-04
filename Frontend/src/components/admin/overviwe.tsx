@@ -30,7 +30,7 @@ export function Overview() {
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">RS 2,234,530/=</div>
+          <div className="text-2xl font-bold">₹12,234,530</div>
           <p className="text-xs text-muted-foreground">+2.5% from last month</p>
         </CardContent>
       </Card>

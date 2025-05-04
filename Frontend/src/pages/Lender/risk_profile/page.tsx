@@ -14,6 +14,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { loanService, riskService } from "@/services/api";
 
 interface CustomerData {
   age: string;
@@ -49,36 +51,172 @@ const RiskProfilePage: React.FC = () => {
   const [customerId, setCustomerId] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [riskLevel, setRiskLevel] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string>("");
+  const { toast } = useToast();
 
   const form = useForm<CustomerData>({
     defaultValues,
   });
 
-  const handleSearch = () => {
-    // TODO: replace with real API fetch
-    const mockData: CustomerData = {
-      age: "45",
-      gender: "Male",
-      maritalStatus: "Married",
-      housingStatus: "Own",
-      job: "Engineer",
-      monthlyIncome: "80000",
-      province: "Central",
-      city: "Kandy",
-      noOfPreviousLoans: "2",
-      noOfAvailableLoans: "1",
-      noOfOnTimePayments: "10",
-      noOfLatePayments: "1",
-    };
-    form.reset(mockData);
+  const handleSearch = async () => {
+    if (!customerId.trim()) {
+      setSearchError("Please enter a NIC number");
+      return;
+    }
+
+    setIsLoading(true);
+    setSearchError("");
+
+    try {
+      // Search for customer using the borrowers API
+      const borrowerData = await loanService.searchCustomerByNIC(customerId);
+      
+      // Map the API response to our form data structure
+      const formData: CustomerData = {
+        age: borrowerData.date_of_birth ? calculateAge(borrowerData.date_of_birth).toString() : "",
+        gender: borrowerData.gender || "",
+        maritalStatus: borrowerData.marital_status || "",
+        housingStatus: borrowerData.housing_status || "",
+        job: borrowerData.job_title || "",
+        monthlyIncome: borrowerData.monthly_income ? borrowerData.monthly_income.toString() : "",
+        province: borrowerData.address?.province || "",
+        city: borrowerData.address?.city || "",
+        noOfPreviousLoans: "0",
+        noOfAvailableLoans: "0",
+        noOfOnTimePayments: "0",
+        noOfLatePayments: "0"
+      };
+
+      // Try to get loan statistics if available
+      try {
+        if (borrowerData.id) {
+          // Get loan data for this borrower if available
+          const loans = await loanService.getCustomerLoansByNIC(customerId);
+          if (loans && Array.isArray(loans)) {
+            formData.noOfPreviousLoans = loans.length.toString();
+            // Count active loans
+            const activeLoans = loans.filter(loan => 
+              loan.orderState === "pending" || loan.orderState === "partial_paid"
+            ).length;
+            formData.noOfAvailableLoans = activeLoans.toString();
+            
+            // Count payments
+            let onTimePayments = 0;
+            let latePayments = 0;
+            
+            // Try to fetch and process payment data for each loan
+            for (const loan of loans) {
+              try {
+                if (loan.id) {
+                  console.log(`Fetching payments for loan ${loan.id}`);
+                  const payments = await loanService.getLoanPayments(loan.id);
+                  
+                  if (payments && Array.isArray(payments)) {
+                    onTimePayments += payments.filter(p => 
+                      p.status === "COMPLETED" || p.status === "completed"
+                    ).length;
+                    
+                    latePayments += payments.filter(p => 
+                      ["LATE", "MISSED", "late", "missed"].includes(p.status || "")
+                    ).length;
+                  }
+                }
+              } catch (error) {
+                console.error(`Error fetching payments for loan ${loan.id}:`, error);
+                // Continue with other loans even if one fails
+              }
+            }
+            
+            formData.noOfOnTimePayments = onTimePayments.toString();
+            formData.noOfLatePayments = latePayments.toString();
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching loan data:", error);
+        toast({
+          title: "Warning",
+          description: "Found customer but couldn't retrieve complete loan history.",
+          variant: "warning",
+        });
+        // Continue with the borrower data we have
+      }
+
+      // Reset the form with the new data
+      form.reset(formData);
+      
+      toast({
+        title: "Customer Found",
+        description: "Customer data has been loaded successfully.",
+      });
+    } catch (error) {
+      console.error("Error searching for customer:", error);
+      setSearchError("Customer not found or error occurred during search");
+      toast({
+        title: "Error",
+        description: "Failed to find customer with the provided NIC number.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onSubmit = (data: CustomerData) => {
-    // TODO: send data to ML endpoint
-    console.log("Submitting data:", data);
-    const result = "High"; // or derive from response
-    setRiskLevel(result);
-    setIsDialogOpen(true);
+  const onSubmit = async (data: CustomerData) => {
+    setIsLoading(true);
+    try {
+      // Format the data for risk analysis
+      const riskData = {
+        borrower_id: customerId, // Using NIC as identifier
+        age: parseInt(data.age) || 0,
+        gender: data.gender,
+        marital_status: data.maritalStatus,
+        job: data.job,
+        monthly_income: parseFloat(data.monthlyIncome) || 0,
+        housing_status: data.housingStatus,
+        district: data.province, // Using province as district
+        city: data.city,
+        no_of_previous_loans: parseInt(data.noOfPreviousLoans) || 0,
+        no_of_available_loans: parseInt(data.noOfAvailableLoans) || 0,
+        total_on_time_payments: parseInt(data.noOfOnTimePayments) || 0,
+        total_late_payments: parseInt(data.noOfLatePayments) || 0,
+      };
+
+      // Save the risk analysis data
+      const result = await riskService.analyzeRisk(riskData);
+      
+      // Set the risk level from the response
+      setRiskLevel(result.risk_level.toUpperCase());
+      setIsDialogOpen(true);
+
+      toast({
+        title: "Risk Analysis Complete",
+        description: "The borrower risk profile has been analyzed.",
+      });
+    } catch (error) {
+      console.error("Error submitting risk data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process the risk analysis. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to calculate age from date of birth
+  const calculateAge = (dateOfBirth: string): number => {
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    
+    return age;
   };
 
   return (
@@ -89,14 +227,27 @@ const RiskProfilePage: React.FC = () => {
       <CardContent>
         <div className="flex mb-4 space-x-2">
           <Input
-            placeholder="Enter customer ID"
+            placeholder="Enter customer NIC number"
             value={customerId}
             onChange={(e) => setCustomerId(e.target.value)}
           />
-          <Button onClick={handleSearch} className="bg-blue-500">Search</Button>
+          <Button 
+            onClick={handleSearch} 
+            className="bg-blue-500"
+            disabled={isLoading}
+          >
+            {isLoading ? "Searching..." : "Search"}
+          </Button>
         </div>
+        
+        {searchError && (
+          <div className="text-red-500 mb-4">
+            {searchError}
+          </div>
+        )}
+        
         <div className="my-8">
-            <p className="text-lg">please submit data for analyse profile</p>
+            <p className="text-lg">Please submit data for risk profile analysis</p>
         </div>
 
         <Form {...form}>  
@@ -247,8 +398,8 @@ const RiskProfilePage: React.FC = () => {
                 )}
               />
             </div>
-            <Button type="submit" className="w-full bg-blue-500">
-              Submit
+            <Button type="submit" className="w-full bg-blue-500" disabled={isLoading}>
+              {isLoading ? "Analyzing..." : "Submit"}
             </Button>
           </form>
         </Form>
@@ -266,16 +417,18 @@ const RiskProfilePage: React.FC = () => {
 
           <div className="py-6 flex justify-center">
             <Badge className={`px-4 py-2 text-lg font-semibold ${
-              riskLevel === "High"
+              riskLevel === "HIGH"
                 ? "bg-red-200 text-red-800"
-                : riskLevel === "Medium"
+                : riskLevel === "MEDIUM"
                 ? "bg-yellow-200 text-yellow-800"
                 : "bg-green-200 text-green-800"
             }`}>{riskLevel}</Badge>
           </div>
 
           <DialogFooter>
-            <DialogClose>Close</DialogClose>
+            <DialogClose asChild>
+              <Button variant="outline">Close</Button>
+            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>

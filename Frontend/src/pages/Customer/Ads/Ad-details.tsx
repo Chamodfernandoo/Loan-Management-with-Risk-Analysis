@@ -7,94 +7,65 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { ArrowLeft, MapPin, Phone, Store, User, Percent, Calendar, Info } from "lucide-react"
-
-// Sample data with interest rates and loan types
-const sampleAds: LenderAd[] = [
-  {
-    id: "1",
-    createdAt: new Date("2023-01-15"),
-    updatedAt: new Date("2023-01-15"),
-    location: {
-      district: "Colombo",
-      city: "Colombo 3",
-    },
-    shopName: "Capital Loans",
-    lenderName: "John Perera",
-    contactNumber: "077-1234567",
-    description:
-      "We offer competitive interest rates on personal and business loans. Quick approval process and flexible repayment options. Our team of financial experts will guide you through the entire process, ensuring you get the best loan terms tailored to your needs. We pride ourselves on transparency and excellent customer service.",
-    photos: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600&text=Photo+2",
-      "/placeholder.svg?height=400&width=600&text=Photo+3",
-    ],
-    lenderId: "lender-1",
-    interestRate: 12.5,
-    loanTypes: ["Personal", "Business"],
-  },
-  {
-    id: "2",
-    createdAt: new Date("2023-02-20"),
-    updatedAt: new Date("2023-02-20"),
-    location: {
-      district: "Kandy",
-      city: "Kandy",
-    },
-    shopName: "Hill Country Finance",
-    lenderName: "Samantha Silva",
-    contactNumber: "071-9876543",
-    description:
-      "Specializing in small business loans and microfinance. Serving the Kandy region for over 10 years with trusted financial services.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "lender-2",
-    interestRate: 14.0,
-    loanTypes: ["Business", "Microfinance", "Agriculture"],
-  },
-  {
-    id: "4",
-    createdAt: new Date("2023-04-05"),
-    updatedAt: new Date("2023-04-05"),
-    location: {
-      district: "Kegalle",
-      city: "Kegalle",
-    },
-    shopName: "Sameera Finance",
-    lenderName: "Sameera Rathnayake",
-    contactNumber: "077-6653521",
-    description:
-      "Family-owned lending business offering personal loans, business loans, and installment plans. Trusted by the community for generations.",
-    photos: ["/placeholder.svg?height=400&width=600"],
-    lenderId: "current-lender-id",
-    interestRate: 13.75,
-    loanTypes: ["Personal", "Business", "Education"],
-  },
-]
+import { adService } from "@/services/api"
+import { useToast } from "@/hooks/use-toast"
 
 const BorrowerAdDetailPage: React.FC = () => {
   const params = useParams()
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [ad, setAd] = useState<LenderAd | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // In a real app, you would fetch the ad from your API
-    const adId = params.id as string
-    const foundAd = sampleAds.find((a) => a.id === adId)
-
-    if (foundAd) {
-      setAd(foundAd)
-      if (foundAd.photos.length > 0) {
-        setSelectedPhoto(foundAd.photos[0])
+    const fetchAdDetails = async () => {
+      try {
+        setLoading(true)
+        const adId = params.id as string
+        const adData = await adService.getAd(adId)
+        
+        // Format the data
+        const formattedAd = {
+          id: adData._id || adData.id,
+          createdAt: new Date(adData.created_at || adData.createdAt),
+          updatedAt: new Date(adData.updated_at || adData.updatedAt),
+          location: adData.location,
+          shopName: adData.shop_name || adData.shopName,
+          lenderName: adData.lender_name || adData.lenderName,
+          contactNumber: adData.contact_number || adData.contactNumber,
+          description: adData.description,
+          photos: adData.photos || [],
+          lenderId: adData.lender_id || adData.lenderId,
+          interestRate: adData.interest_rate || adData.interestRate || 0,
+          loanTypes: adData.loan_types || adData.loanTypes || [],
+        }
+        
+        setAd(formattedAd)
+        
+        if (formattedAd.photos.length > 0) {
+          setSelectedPhoto(formattedAd.photos[0])
+        }
+      } catch (error: any) {
+        console.error("Error fetching advertisement details:", error)
+        toast({
+          title: "Failed to load advertisement",
+          description: error.response?.data?.detail || "There was an error loading the advertisement details.",
+          variant: "destructive"
+        })
+      } finally {
+        setLoading(false)
       }
     }
-
-    setLoading(false)
-  }, [params.id])
+    
+    fetchAdDetails()
+  }, [params.id, toast])
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 flex justify-center items-center">Loading...</div>
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
     )
   }
 
@@ -202,8 +173,8 @@ const BorrowerAdDetailPage: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-3">Available Loan Types</h3>
             <div className="flex flex-wrap gap-2">
-              {ad.loanTypes.map((type) => (
-                <Badge key={type} className="px-3 py-1">
+              {(ad.loanTypes || []).map((type, index) => (
+                <Badge key={index} className="px-3 py-1">
                   {type}
                 </Badge>
               ))}

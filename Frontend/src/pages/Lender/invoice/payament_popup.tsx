@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
+import { useEffect } from "react"
 
 const formSchema = z.object({
   amount: z
@@ -33,34 +34,68 @@ type FormValues = z.infer<typeof formSchema>
 const paymentMethods = [
   { value: "cash", label: "Cash" },
   { value: "card", label: "Card" },
-  // { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "bank_transfer", label: "Bank Transfer" },
   { value: "cheque", label: "Cheque" },
 ]
 
-interface PaymentPopupProps {
-  onSubmitPayment: (amount: string, date: Date, method: string) => void
+interface NextInstallment {
+  amount: number;
+  dueDate: string;
 }
 
-const Payament_popup = ({ onSubmitPayment }: PaymentPopupProps) => {
+interface PaymentPopupProps {
+  onSubmitPayment: (amount: string, date: Date, method: string) => void;
+  nextInstallment?: NextInstallment | null;
+  loanId?: string;
+}
+
+const Payament_popup = ({ onSubmitPayment, nextInstallment, loanId }: PaymentPopupProps) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: "",
+      amount: nextInstallment ? nextInstallment.amount.toString() : "",
       date: new Date(),
     },
   })
 
+  // Update form with next installment amount when it changes
+  useEffect(() => {
+    if (nextInstallment && nextInstallment.amount) {
+      form.setValue("amount", nextInstallment.amount.toString())
+    }
+  }, [nextInstallment, form])
+
   function onSubmit(data: FormValues) {
-    console.log("Form submitted:", data)
-    onSubmitPayment(data.amount, data.date, data.method)
-    form.reset()
+    console.log("Form submitted:", data);
+    
+    // Ensure the date is properly formatted
+    const paymentDate = new Date(data.date);
+    
+    // Send the data to the parent component
+    onSubmitPayment(data.amount, paymentDate, data.method);
+    
+    // Reset the form
+    form.reset();
+    
+    // Show a success toast
+    toast({
+      title: "Payment Recorded",
+      description: "The payment has been successfully recorded and notifications sent.",
+    });
   }
 
   return (
     <div className="px-4 py-6 max-w-xl">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-blue-600">Pay now</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-blue-600">
+            {nextInstallment ? "Record Next Payment" : "Add Payment"}
+          </CardTitle>
+          {nextInstallment && nextInstallment.dueDate && (
+            <div className="text-center text-sm text-muted-foreground">
+              Next installment due: {format(new Date(nextInstallment.dueDate), "MMM dd, yyyy")}
+            </div>
+          )}
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -72,7 +107,7 @@ const Payament_popup = ({ onSubmitPayment }: PaymentPopupProps) => {
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your amount" {...field} />
+                      <Input placeholder="Enter payment amount" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,7 +174,7 @@ const Payament_popup = ({ onSubmitPayment }: PaymentPopupProps) => {
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full">
-                Pay
+                Record Payment
               </Button>
             </CardFooter>
           </form>
