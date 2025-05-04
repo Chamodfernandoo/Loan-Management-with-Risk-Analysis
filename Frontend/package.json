@@ -31,7 +31,7 @@
     "@radix-ui/react-toast": "^1.2.10",
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@tanstack/react-table": "^8.21.2",
-    "axios": "^1.8.4",
+    "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "cloudinary-react": "^1.8.1",
     "clsx": "^2.1.1",
