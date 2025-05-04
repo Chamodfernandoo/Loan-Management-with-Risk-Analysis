@@ -12,6 +12,18 @@ async def connect_to_mongo():
     await Database.db.command("ping")  # Test the connection
     print("Connected to MongoDB")
     
+    # Ensure required collections exist
+    collections = await Database.db.list_collection_names()
+    required_collections = [
+        "users", "loans", "payments", "notifications", 
+        "borrowers", "lenders", "advertisements"
+    ]
+    
+    for collection in required_collections:
+        if collection not in collections:
+            await Database.db.create_collection(collection)
+            print(f"Created missing collection: {collection}")
+        
 async def close_mongo_connection():
     if Database.client:
         Database.client.close()

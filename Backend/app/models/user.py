@@ -27,27 +27,18 @@ class UserCreate(BaseModel):
     phone_number: str
     full_name: str
     role: Literal["lender", "borrower"]
+    nic_number: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    marital_status: Optional[str] = None
+    housing_status: Optional[str] = None
+    job_title: Optional[str] = None
+    monthly_income: Optional[float] = None
     address: Optional[Address] = None
+    document_type: Optional[str] = None
     document_uploads: Optional[List[str]] = None
-    nic_number: Optional[str]
-    gender: Optional[str]
-    date_of_birth: Optional[date]
-    marital_status: Optional[str]
-    housing_status: Optional[str]
-    job_title: Optional[str]
-    monthly_income: Optional[float]
-    address: Optional[Address]
-    document_type: Optional[str]
-    document_uploads: Optional[List[str]]  # e.g. file URLs or base64 blobs
     terms_accepted: bool
-    
-class UserInDB(UserBase):
-    id: str = Field(..., alias="_id")
-    hashed_password: str
-    is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
+    business_name: Optional[str] = None  # Added for lender role
 class User(BaseModel):
     id: str
     email: EmailStr

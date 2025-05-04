@@ -6,6 +6,7 @@ from datetime import datetime
 from ..core.auth import get_current_active_user
 from ..core.database import get_collection
 from ..models.payments import Payment, PaymentCreate, PaymentMethod
+from ..utils.notification_utils import send_payment_notifications
 
 router = APIRouter(
     prefix="/payments",
@@ -13,82 +14,187 @@ router = APIRouter(
     dependencies=[Depends(get_current_active_user)]
 )
 
-@router.post("/", response_model=Payment)
+@router.post("/", response_model=dict)
 async def create_payment(
-    payment: PaymentCreate,
+    payment_data: dict,
     current_user = Depends(get_current_active_user)
 ):
+    """Create a new payment"""
     loans_collection = get_collection("loans")
     payments_collection = get_collection("payments")
     
-    # Verify the loan exists
-    loan = await loans_collection.find_one({"_id": ObjectId(payment.loan_id)})
+    # Validate the loan exists
+    loan_id = payment_data.get("loan_id")
+    if not loan_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Loan ID is required"
+        )
+    
+    try:
+        loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid loan ID format"
+        )
+        
     if not loan:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Loan not found"
         )
     
-    # Verify the payment belongs to the user or the lender
+    # Verify authorization
     if current_user["role"] == "borrower" and loan["borrower_id"] != str(current_user["_id"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only make payments for your own loans"
         )
-    
+        
     if current_user["role"] == "lender" and loan["lender_id"] != str(current_user["_id"]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only process payments for loans you've issued"
         )
     
-    # Create the payment
-    payment_dict = payment.dict(exclude_unset=True)
-    payment_dict["user_id"] = str(current_user["_id"])
-    payment_dict["status"] = "pending"  # Initial status
-    payment_dict["created_at"] = datetime.utcnow()
+    # Create payment document
+    payment_document = {
+        "loan_id": loan_id,
+        "user_id": str(current_user["_id"]),
+        "amount": float(payment_data.get("amount", 0)),
+        "method": payment_data.get("method", "card"),
+        "method_details": payment_data.get("method_details", {}),
+        "status": "COMPLETED",  # For this implementation, assume payment is successful
+        "description": payment_data.get("description", "Loan payment"),
+        "created_at": datetime.utcnow()
+    }
     
-    result = await payments_collection.insert_one(payment_dict)
-    created_payment = await payments_collection.find_one({"_id": result.inserted_id})
+    # Insert payment record
+    payment_result = await payments_collection.insert_one(payment_document)
+    payment_document["_id"] = payment_result.inserted_id
     
-    # Update loan payment status (in a real app, this might be handled by a payment processor callback)
-    # This is simplified for demonstration
+    # Update loan payment status and remaining amount
+    total_paid = loan.get("total_paid", 0) + payment_document["amount"]
+    remaining_amount = loan["total_amount"] - total_paid if "total_amount" in loan else 0
+    
+    # If remaining amount is zero or negative, mark loan as completed
+    new_status = loan["status"]
+    if remaining_amount <= 0 and loan["status"] != "COMPLETED":
+        new_status = "COMPLETED"
+    
+    # Update loan with payment information
     await loans_collection.update_one(
-        {"_id": ObjectId(payment.loan_id)},
-        {"$inc": {"paid_amount": payment.amount}}
+        {"_id": ObjectId(loan_id)},
+        {
+            "$set": {
+                "total_paid": total_paid,
+                "remaining_amount": remaining_amount,
+                "status": new_status,
+                "updated_at": datetime.utcnow()
+            },
+            "$push": {
+                "payments": {
+                    "payment_id": str(payment_result.inserted_id),
+                    "amount": payment_document["amount"],
+                    "status": "COMPLETED",
+                    "payment_date": payment_document["created_at"]
+                }
+            }
+        }
     )
     
-    return created_payment
+    # Send payment notifications
+    await send_payment_notifications(payment_document, loan)
+    
+    # Return the created payment with id
+    payment_document["_id"] = str(payment_result.inserted_id)
+    return payment_document
 
-@router.get("/", response_model=List[Payment])
+@router.get("/")
 async def get_payments(
     loan_id: Optional[str] = None,
     status: Optional[str] = None,
     current_user = Depends(get_current_active_user)
 ):
+    """Get payments for a loan or user"""
     payments_collection = get_collection("payments")
+    loans_collection = get_collection("loans")
     
-    # Build query based on user role
+    # Build query based on parameters
     query = {}
     
-    if current_user["role"] == "borrower":
-        query["user_id"] = str(current_user["_id"])
-    elif current_user["role"] == "lender":
-        # For lenders, get payments for loans they've issued
-        loans_collection = get_collection("loans")
-        cursor = loans_collection.find({"lender_id": str(current_user["_id"])})
-        loans = await cursor.to_list(length=100)
-        loan_ids = [str(loan["_id"]) for loan in loans]
-        query["loan_id"] = {"$in": loan_ids}
-    
+    # If loan_id provided, verify access
     if loan_id:
+        try:
+            loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid loan ID format"
+            )
+            
+        if not loan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Loan not found"
+            )
+        
+        # Check access rights
+        if current_user["role"] == "borrower" and loan["borrower_id"] != str(current_user["_id"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view these payments"
+            )
+            
+        if current_user["role"] == "lender" and loan["lender_id"] != str(current_user["_id"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view these payments"
+            )
+            
         query["loan_id"] = loan_id
+    else:
+        # If no loan_id, show only user's payments
+        if current_user["role"] == "borrower":
+            # Get all loans for this borrower
+            loans_cursor = loans_collection.find({"borrower_id": str(current_user["_id"])})
+            loans = await loans_cursor.to_list(length=100)
+            loan_ids = [str(loan["_id"]) for loan in loans]
+            query["loan_id"] = {"$in": loan_ids}
+        elif current_user["role"] == "lender":
+            # Get all loans for this lender
+            loans_cursor = loans_collection.find({"lender_id": str(current_user["_id"])})
+            loans = await loans_cursor.to_list(length=100)
+            loan_ids = [str(loan["_id"]) for loan in loans]
+            query["loan_id"] = {"$in": loan_ids}
     
+    # Filter by status if provided
     if status:
         query["status"] = status
     
+    # Get the payments
     cursor = payments_collection.find(query).sort("created_at", -1)
     payments = await cursor.to_list(length=100)
+    
+    # If no payments found in payments collection, look in the loan's payments array
+    if len(payments) == 0 and loan_id:
+        loan = await loans_collection.find_one({"_id": ObjectId(loan_id)})
+        if loan and "payments" in loan and loan["payments"]:
+            # Format payments from loan's payments array
+            for i, payment in enumerate(loan["payments"]):
+                payment["_id"] = f"loan-payment-{i}"
+                payment["loan_id"] = loan_id
+                if "payment_date" not in payment and "due_date" in payment:
+                    payment["payment_date"] = payment["due_date"]
+                if "user_id" not in payment:
+                    payment["user_id"] = loan["borrower_id"]
+            payments = loan["payments"]
+    
+    # Convert ObjectId to string
+    for payment in payments:
+        if "_id" in payment and not isinstance(payment["_id"], str):
+            payment["_id"] = str(payment["_id"])
     
     return payments
 

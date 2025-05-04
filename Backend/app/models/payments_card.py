@@ -41,3 +41,4 @@ class Card(CardBase):
     class Config:
         validate_by_name = True
         arbitrary_types_allowed = True
+        populate_by_name = True

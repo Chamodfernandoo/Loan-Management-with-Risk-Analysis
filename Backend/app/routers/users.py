@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("/me", response_model=dict)
 async def get_current_user_profile(current_user = Depends(get_current_active_user)):
-     # make a shallow copy so we don’t mutate the Mongo document in place
+     # make a shallow copy so we don't mutate the Mongo document in place
     user_doc = dict(current_user)
     # remove sensitive/internal fields
     user_doc.pop("hashed_password", None)
@@ -39,10 +39,13 @@ async def update_user_profile(
     )
     
     updated_user = await users_collection.find_one({"_id": ObjectId(current_user["_id"])})
-    updated_user.pop("hashed_password", None)  # Remove sensitive information
     
-    return updated_user
-
+    # Convert the document to a dict and handle ObjectId
+    result = dict(updated_user)
+    result["id"] = str(result.pop("_id"))  # Convert ObjectId to string
+    result.pop("hashed_password", None)  # Remove sensitive information
+    
+    return result
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
 async def change_password(
     password_change: PasswordChange,
@@ -72,3 +75,69 @@ async def change_password(
     )
     
     return None
+
+@router.put("/address", response_model=dict)
+async def update_user_address(
+    address_data: dict,
+    current_user = Depends(get_current_active_user)
+):
+    """Update the user's address information"""
+    users_collection = get_collection("users")
+    
+    # Ensure address has required fields
+    required_fields = ["province", "district", "city", "address", "postalCode"]
+    for field in required_fields:
+        if field not in address_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Missing required address field: {field}"
+            )
+    
+    # Format address data to match database schema
+    formatted_address = {
+        "province": address_data["province"],
+        "district": address_data["district"],
+        "city": address_data["city"],
+        "address": address_data["address"],
+        "postal_code": address_data["postalCode"]
+    }
+    
+    # Update address in user document
+    await users_collection.update_one(
+        {"_id": ObjectId(current_user["_id"])},
+        {"$set": {
+            "address": formatted_address,
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    # If user is a lender, also update address in lender profile
+    if current_user["role"] == "lender":
+        lenders_collection = get_collection("lenders")
+        await lenders_collection.update_one(
+            {"user_id": str(current_user["_id"])},
+            {"$set": {
+                "address": formatted_address,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+    # If user is a borrower, also update address in borrower profile
+    elif current_user["role"] == "borrower":
+        borrowers_collection = get_collection("borrowers")
+        await borrowers_collection.update_one(
+            {"user_id": str(current_user["_id"])},
+            {"$set": {
+                "address": formatted_address,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+    
+    # Get updated user
+    updated_user = await users_collection.find_one({"_id": ObjectId(current_user["_id"])})
+    
+    # Convert the document to a dict and handle ObjectId
+    result = dict(updated_user)
+    result["id"] = str(result.pop("_id"))  # Convert ObjectId to string
+    result.pop("hashed_password", None)  # Remove sensitive information
+    
+    return result

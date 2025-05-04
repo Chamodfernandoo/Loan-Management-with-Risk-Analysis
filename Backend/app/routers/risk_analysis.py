@@ -113,15 +113,25 @@ async def analyze_borrower_risk(
             detail="Only lenders can analyze borrower risk"
         )
     
-    # Verify borrower exists
+    # Verify borrower exists - first check if we have an ID or NIC
     users_collection = get_collection("users")
-    user = await users_collection.find_one({"_id": ObjectId(risk_data.borrower_id)})
+    borrower_id = risk_data.borrower_id
+    
+    try:
+        # Try to find by object ID first
+        user = await users_collection.find_one({"_id": ObjectId(borrower_id)})
+    except:
+        # If that fails, try to find by NIC number
+        user = await users_collection.find_one({"nic_number": borrower_id})
     
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Borrower not found"
         )
+    
+    # Set the correct borrower_id to the user's ID
+    risk_data.borrower_id = str(user["_id"])
     
     try:
         # This is a placeholder for your actual risk model
@@ -137,6 +147,12 @@ async def analyze_borrower_risk(
             recommendations=recommendations,
             analyzed_at=datetime.utcnow()
         )
+        
+        # Store the analysis result in the database
+        risk_analysis_collection = get_collection("risk_analysis")
+        analysis_data = response.dict()
+        analysis_data["created_at"] = datetime.utcnow()
+        await risk_analysis_collection.insert_one(analysis_data)
         
         return response
         
