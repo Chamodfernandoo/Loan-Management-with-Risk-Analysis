@@ -107,7 +107,7 @@ export default function LoanHistoryPage() {
     <div className="container mx-auto py-6 space-y-6">
       <Card>
         <CardHeader className="pb-3 flex flex-row gap-5">
-          <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate(-1)}>
+          <Button variant="outline" className="mb-4 sm:mb-6" onClick={() => navigate("/lender")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
