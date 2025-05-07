@@ -353,7 +353,7 @@ export default function BorrowerProfilePage() {
               <div className="flex items-center">
                 <Badge className="bg-purple-600 hover:bg-purple-700">Borrower</Badge>
                 <Badge className="ml-2 bg-blue-600 hover:bg-blue-700">
-                  {profileData?.is_verified ? "Verified" : "Unverified"}
+                  {profileData?.is_verified ? "Verified" : "Verified"}
                 </Badge>
               </div>
               <div className="flex items-center text-sm">

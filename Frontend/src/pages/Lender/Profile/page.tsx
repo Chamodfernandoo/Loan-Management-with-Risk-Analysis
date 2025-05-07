@@ -326,7 +326,7 @@ export default function LenderProfilePage() {
               <div className="flex items-center">
                 <Badge className="bg-green-600 hover:bg-green-700">Lender</Badge>
                 <Badge className="ml-2 bg-blue-600 hover:bg-blue-700">
-                  {userData?.is_verified ? "Verified" : "Unverified"}
+                  {userData?.is_verified ? "Verified" : "verified"}
                 </Badge>
               </div>
               <div className="flex items-center text-sm">
