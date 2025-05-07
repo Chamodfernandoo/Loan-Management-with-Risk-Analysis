@@ -19,10 +19,9 @@ import {
   X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import { authService } from "@/services/api"
 
 // Dashboard stat card component
@@ -116,7 +115,7 @@ const Lender_dashbord = () => {
   const navigate = useNavigate()
   const { toast } = useToast()
   const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [_loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Fetch user data
@@ -181,7 +180,7 @@ const Lender_dashbord = () => {
             <Button 
               variant="outline" 
               size="sm"
-              className="flex items-center gap-2 hidden md:flex" 
+              className="flex items-center gap-2 md:flex" 
               asChild
             >
               <Link to="/lender/profile">
