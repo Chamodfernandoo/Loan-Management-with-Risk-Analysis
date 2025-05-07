@@ -1,8 +1,18 @@
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, Users, CreditCard, Settings, BarChart, HelpCircle, LogOut, BrainCircuit } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 export function AdminSidebar() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <div className="hidden border-r bg-gray-100/40 lg:block dark:bg-gray-800/40 w-64">
       <div className="flex h-full max-h-screen flex-col gap-2">
@@ -66,7 +76,7 @@ export function AdminSidebar() {
           </nav>
         </div>
         <div className="mt-auto p-4">
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             Log Out
           </Button>

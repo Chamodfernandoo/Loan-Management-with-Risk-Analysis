@@ -78,7 +78,7 @@ export const columns: ColumnDef<Loan>[] = [
   },
     {
     accessorKey: "orderState",
-    header: "Order State",
+    header: "Loan State",
     cell: ({ row }) => {
       const status = row.getValue("orderState") as string
     

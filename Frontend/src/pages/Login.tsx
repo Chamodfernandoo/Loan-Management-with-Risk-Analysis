@@ -14,6 +14,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { authService } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from "@/hooks/use-toast"
 
 // Clear potentially invalid authentication tokens
 if (localStorage.getItem('token')) {
@@ -45,6 +46,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
+  const { toast } = useToast();
 
   // Check if user is already logged in and redirect if needed
   useEffect(() => {
@@ -59,6 +61,14 @@ const Login = () => {
     const checkAuth = async () => {
       console.log("🔄 Checking existing authentication");
       try {
+         // Special case for admin token
+         if (token === "admin-mock-token") {
+          console.log("✅ Admin already authenticated");
+          console.log("🧭 Redirecting to admin dashboard");
+          navigate("/admin", { replace: true });
+          return;
+        }
+
         const user = await authService.getCurrentUser();
         console.log("✅ User already authenticated:", user);
         
@@ -114,6 +124,13 @@ const Login = () => {
           is_active: true
         });
         
+         // Show success toast notification
+         toast({
+          title: "Admin Login Successful",
+          description: "Welcome to the admin dashboard!",
+          variant: "default",
+        });
+
         // Navigate to admin dashboard
         navigate("/admin", { replace: true });
         return;
@@ -232,6 +249,23 @@ const Login = () => {
                   </Button>
                 </form>
               </Form>
+
+               {/* Admin login button */}
+               <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => {
+                    form.setValue('username', ADMIN_EMAIL);
+                    form.setValue('password', ADMIN_PASSWORD);
+                    setTimeout(() => {
+                      form.handleSubmit(onSubmit)();
+                    }, 100);
+                  }}
+                >
+                  Admin Login
+                </Button>
+              </div>
             </div>
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">

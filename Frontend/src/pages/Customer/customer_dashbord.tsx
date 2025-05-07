@@ -37,7 +37,6 @@ const Customer_dashbord = () => {
         <ButtonCard icon="" title="Support" href="/borrower/support" />
         <ButtonCard icon="" title="Find Lenders" href="/borrower/ads/all-ads" />
         <ButtonCard icon="" title="Notification" href="/borrower/notifications" />
-        <ButtonCard icon="" title="Lender dashbord(this is temparaly) " href="/lender" />
         <ButtonCard icon="" title="Loans Summary" href="/borrower/loan-summary" />
       </div>
     </div>

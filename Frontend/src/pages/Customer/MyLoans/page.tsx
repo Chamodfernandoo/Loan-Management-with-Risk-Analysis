@@ -46,7 +46,7 @@ export default function MyLoanHistoryPage() {
             if (loan.payments && loan.payments.some((p: any) => p.status === "LATE" || p.status === "MISSED")) {
               installmentState = "overdue"
             } else if (loan.payments && loan.payments.some((p: any) => p.status === "PENDING")) {
-              installmentState = "pending"
+              installmentState = "ok"
             } else {
               installmentState = "ok"
             }

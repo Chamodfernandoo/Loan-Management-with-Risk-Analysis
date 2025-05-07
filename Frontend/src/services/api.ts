@@ -43,8 +43,16 @@ api.interceptors.response.use(
       data: error.response?.data
     });
     
-    // Handle authentication errors
-    if (error.response && error.response.status === 401) {
+     // Handle authentication errors - but skip for admin token
+     if (error.response && error.response.status === 401) {
+      // Check if using admin token
+      const token = localStorage.getItem('token');
+      if (token === "admin-mock-token") {
+        console.log("Admin token detected, ignoring 401 error for:", error.config?.url);
+        // For admin users, don't redirect on 401, just reject the promise
+        return Promise.reject(error);
+      }
+      
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

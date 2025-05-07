@@ -20,7 +20,7 @@ export function Overview() {
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">842</div>
+          <div className="text-2xl font-bold">242</div>
           <p className="text-xs text-muted-foreground">+43 from last month</p>
         </CardContent>
       </Card>
@@ -30,7 +30,7 @@ export function Overview() {
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">₹12,234,530</div>
+          <div className="text-2xl font-bold">RS:2 122,234/=</div>
           <p className="text-xs text-muted-foreground">+2.5% from last month</p>
         </CardContent>
       </Card>
@@ -40,7 +40,7 @@ export function Overview() {
           <AlertTriangle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">24</div>
+          <div className="text-2xl font-bold">10</div>
           <p className="text-xs text-muted-foreground">-3 from last month</p>
         </CardContent>
       </Card>
@@ -50,7 +50,7 @@ export function Overview() {
           <CheckCircle className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">156</div>
+          <div className="text-2xl font-bold">86</div>
           <p className="text-xs text-muted-foreground">+12 from last month</p>
         </CardContent>
       </Card>
