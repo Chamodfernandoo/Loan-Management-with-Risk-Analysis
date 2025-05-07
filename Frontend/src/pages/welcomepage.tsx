@@ -8,8 +8,7 @@
       {/* Header */}
       <header className="p-6 flex justify-between items-center">
         <div className="flex items-center space-x-3">
-          <img src="/src/assets/logo.png" alt="logo" className="w-10 h-10" />
-          <span className="text-3xl font-bold text-blue-700">PAY ME</span>
+          <img src="/src/assets/logo.png" alt="logo" className="w-40 h-20" />
         </div>
       </header>
 

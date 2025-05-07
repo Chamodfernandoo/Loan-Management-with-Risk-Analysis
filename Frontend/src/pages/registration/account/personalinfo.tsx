@@ -18,6 +18,13 @@ import {
   CommandItem,
   CommandList,
 } from "../../../components/ui/command"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group"
 import { cn } from "../../../lib/utils"
 

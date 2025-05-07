@@ -174,7 +174,7 @@ const Login = () => {
             <div className="w-5/6">
               <div className="flex flex-col sm:flex-row sm:space-x-8 space-y-4 sm:space-y-0">
                 <div>
-                  <img src="" alt="logo" className="w-[60px] h-[40px]  lg:w-[80px] lg:h-[50px]"></img>
+                  <img src="/src/assets/logo.png" alt="logo" className="w-[60px] h-[40px]  lg:w-[180px] lg:h-[80px]"></img>
                 </div>
                 <div className="text-xl lg:text-2xl font-medium text-gray-900">
                   <h2>Welcome!<br/>
@@ -195,7 +195,7 @@ const Login = () => {
         <div className="w-full xl:w-1/2 xl:min-h-screen flex justify-center items-center p-4">
           <div className="flex flex-col w-full h-full justify-center items-center">
             <div className="w-full flex flex-col items-center space-y-6 lg:space-y-8 mb-6 lg:mb-10">
-              <img src="/public/flag.png" alt="logo" className="w-[60px] h-[40px] lg:w-[80px] lg:h-[50px]"></img>
+              <img src="/src/assets/logo.png" alt="logo" className="w-[60px] h-[40px] lg:w-[180px] lg:h-[80px]"></img>
               <div className="text-xl lg:text-2xl font-medium text-gray-900 text-center">
                 <h2>Log in<br/>
                   <span className="">to manage your</span>  
