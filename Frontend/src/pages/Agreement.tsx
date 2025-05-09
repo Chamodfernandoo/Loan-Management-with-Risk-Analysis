@@ -174,7 +174,7 @@ const Agreement = ({ onChange }: AgreementProps) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
               <div className="flex flex-col gap-1">
-                <p className="text-sm text-muted-foreground">Name:</p>
+                <p className="text-sm text-muted-foreground">Lender Name:</p>
                 <p className="font-medium">{loanDetails.lender_name || "Lender Name"}</p>
               </div>
               <div className="flex flex-col gap-1">

@@ -71,7 +71,7 @@ export const columns: ColumnDef<Loan>[] = [
       const amount = Number.parseFloat(row.getValue("totalPrice"))
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "USD",
+        currency: "LKR",
       }).format(amount)
       return <div className="font-medium">{formatted}</div>
     }

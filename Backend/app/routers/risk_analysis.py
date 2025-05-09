@@ -4,9 +4,12 @@ from bson import ObjectId
 from datetime import datetime
 import random
 
+
 from ..core.auth import get_current_active_user
 from ..core.database import get_collection
 from ..models.risk_analysis import RiskAnalysisRequest, RiskAnalysisResponse, RiskFactor, RiskLevel
+from .loanmodel_inference import predict_risk
+
 
 router = APIRouter(
     prefix="/risk-analysis",
@@ -163,16 +166,17 @@ async def analyze_borrower_risk(
         )
 
 def perform_risk_analysis(data: RiskAnalysisRequest):
-    """
-    Placeholder for risk analysis model.
-    This would be replaced with your actual model implementation.
-    Uses 3 risk levels: low, medium, high
-    """
-    # Simple logic to calculate risk score based on available data
-    base_score = 50  # Start with medium risk
+ """
+ Placeholder for risk analysis model.
+ This would be replaced with your actual model implementation.
+ Uses 3 risk levels: low, medium, high
+ """
+ # Simple logic to calculate risk score based on available data
+ 
+ base_score = 50  # Start with medium risk
 
     # Adjust based on income
-    if data.monthly_income:
+ if data.monthly_income:
         if data.monthly_income > 100000:
             base_score -= 20
         elif data.monthly_income > 50000:
@@ -181,7 +185,7 @@ def perform_risk_analysis(data: RiskAnalysisRequest):
             base_score += 15
     
     # Adjust based on payment history
-    if data.total_on_time_payments is not None and data.total_late_payments is not None:
+ if data.total_on_time_payments is not None and data.total_late_payments is not None:
         total_payments = data.total_on_time_payments + data.total_late_payments
         if total_payments > 0:
             late_ratio = data.total_late_payments / total_payments
@@ -191,25 +195,25 @@ def perform_risk_analysis(data: RiskAnalysisRequest):
                 base_score -= 15
     
     # Adjust based on existing loans
-    if data.no_of_available_loans and data.no_of_available_loans > 2:
+ if data.no_of_available_loans and data.no_of_available_loans > 2:
         base_score += 10
     
     # Add some randomization
-    base_score += random.uniform(-5, 5)
+ base_score += random.uniform(-5, 5)
     
     # Ensure within bounds
-    risk_score = max(min(base_score, 100), 0)
+ risk_score = max(min(base_score, 100), 0)
     
     # Determine risk level - using 3 levels instead of 4
-    if risk_score < 33:
+ if risk_score < 33:
         risk_level = RiskLevel.LOW
-    elif risk_score < 66:
+ elif risk_score < 66:
         risk_level = RiskLevel.MEDIUM
-    else:
+ else:
         risk_level = RiskLevel.HIGH
     
     # Generate factors
-    factors = [
+ factors = [
         RiskFactor(
             name="Payment History",
             importance=0.35,
@@ -237,19 +241,19 @@ def perform_risk_analysis(data: RiskAnalysisRequest):
     ]
     
     # Generate recommendations based on 3 risk levels
-    if risk_level == RiskLevel.LOW:
+ if risk_level == RiskLevel.LOW:
         recommendations = [
             "Offer preferred interest rates",
             "Consider expedited loan processing",
             "Eligible for maximum loan amount"
         ]
-    elif risk_level == RiskLevel.MEDIUM:
+ elif risk_level == RiskLevel.MEDIUM:
         recommendations = [
             "Proceed with standard terms",
             "Verify income documentation",
             "Regular payment monitoring recommended"
         ]
-    else:  # HIGH
+ else:  # HIGH
         recommendations = [
             "Consider reduced loan amount",
             "Require additional guarantees or collateral",
@@ -257,4 +261,4 @@ def perform_risk_analysis(data: RiskAnalysisRequest):
             "Consider financial counseling for applicant"
         ]
     
-    return risk_score, risk_level, factors, recommendations
+ return risk_score, risk_level, factors, recommendations
