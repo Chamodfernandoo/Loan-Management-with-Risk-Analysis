@@ -208,7 +208,7 @@ const Agreement = ({ onChange }: AgreementProps) => {
                 <p className="font-medium">{loanDetails.customer_address || "Customer Address"}</p>
               </div>
               <div className="flex flex-col gap-2">
-                <p className="text-sm text-muted-foreground">Gender:</p>
+                <p className="text-sm text-muted-foreground">collatral file no</p>
                 <p className="font-medium">{loanDetails.customer_gender || "Gender"}</p>
               </div>
               <div className="flex flex-col gap-2">
@@ -247,6 +247,10 @@ const Agreement = ({ onChange }: AgreementProps) => {
                   </p>
                 </div>
               )}
+              <div>
+                <p className="text-sm text-muted-foreground">description</p>
+                <p className="font-medium">{loanDetails.term_months || "0"}</p>
+              </div>
             </div>
           </div>
 

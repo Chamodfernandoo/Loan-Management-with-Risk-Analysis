@@ -26,6 +26,7 @@ const formSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   loan_name: z.string().min(1, "Lender name is required"),
   description: z.string().min(1, "Description is required"),
+  collatral_file: z.string().optional(),
   installments: z.string().min(1, "Number of installments is required"),
   taxRate: z.string().min(1, "Tax rate is required"),
   installmentPrice: z.string().min(1, "Installment price is required"),
@@ -57,6 +58,7 @@ export default function CreateLoanPage() {
       loan_name: "",
       amount: "",
       description: "",
+      collatral_file: "",
       installments: "",
       taxRate: "10", // Default tax rate 10%
       installmentPrice: "",
@@ -364,6 +366,14 @@ export default function CreateLoanPage() {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl><Textarea placeholder="Loan purpose" {...field}/></FormControl>
+                  <FormMessage/>
+                </FormItem>
+              )} />
+
+                <FormField control={form.control} name="collatral_file" render={({ field })=> (
+                <FormItem>
+                  <FormLabel>Collatral file number (if have)</FormLabel>
+                  <FormControl><Input placeholder="Enter Collatral file number" {...field}/></FormControl>
                   <FormMessage/>
                 </FormItem>
               )} />
