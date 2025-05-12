@@ -25,6 +25,7 @@ export interface LenderAd {
   loan_types?: string[]
   created_at?: string | Date
   updated_at?: string | Date
+  is_owner?: boolean
 }
 
 export const loanTypes = [
@@ -94,4 +95,12 @@ export const cities: Record<string, string[]> = {
   Ratnapura: ["Ratnapura", "Embilipitiya", "Balangoda", "Eheliyagoda", "Pelmadulla"],
   Trincomalee: ["Trincomalee", "Kinniya", "Muttur", "Kantale", "Thampalakamam"],
   Vavuniya: ["Vavuniya", "Cheddikulam", "Nedunkeni", "Omanthai", "Vavuniya South"],
+  Anuradhapura: ["Anuradhapura", "Mihintale", "Talawa", "Kebithigollewa", "Medawachchiya"],
+  Nuwara_Eliya: ["nuwara eliya", "Hatton", "Talawakele", "Maskeliya", "Kotagala"],
+  Badulla: ["Badulla", "Haputale", "Ella", "Bandarawela", "Mahiyanganaya"],
+  Batticaloa: ["Batticaloa", "Kaluwanchikudy", "Eravur", "Koralai Pattu", "Manmunai North"],
+  Ampara: ["Ampara", "Kalmunai", "Samanthurai", "Padiyathalawa", "Uhana"],
+  Hambantota: ["Hambantota", "Tangalle", "Ambalantota", "Beliatta", "Weeraketiya"],
+  Jaffna: ["Jaffna", "Chavakachcheri", "Point Pedro", "Nallur", "Tellippalai"],
+  Galle: ["Galle", "Hikkaduwa", "Ambalangoda", "Unawatuna", "Karapitiya"],
 }

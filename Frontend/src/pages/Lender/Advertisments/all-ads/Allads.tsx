@@ -87,7 +87,7 @@ const AllAdsPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <Button variant="outline" onClick={() => navigate(-1)}>
+        <Button variant="outline" onClick={() => navigate("/lender")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
