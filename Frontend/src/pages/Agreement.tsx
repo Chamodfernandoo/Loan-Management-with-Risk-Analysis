@@ -47,12 +47,14 @@ const Agreement = ({ onChange }: AgreementProps) => {
             borrower_nic: loan.borrower_nic || "N/A",
             customer_phone: loan.customer_phone || "N/A",
             customer_address: loan.customer_address || "N/A",
-            customer_gender: loan.customer_gender || "N/A",
+            purpose: loan.purpose || "N/A",
             amount: loan.amount,
             interest_rate: loan.interest_rate,
             term_months: loan.term_months,
             installment_amount: loan.installment_amount,
-            status: loan.status
+            status: loan.status,
+            created_at: loan.created_at,
+            
           }
           
           setLoanDetails(transformedLoan)
@@ -140,6 +142,7 @@ const Agreement = ({ onChange }: AgreementProps) => {
       </div>
     )
   }
+  
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-5xl">
@@ -157,7 +160,7 @@ const Agreement = ({ onChange }: AgreementProps) => {
               LOAN Agreement {viewOnly ? '(Read Only)' : ''}
             </CardTitle>
             <div className="text-sm font-medium border border-gray-300 rounded px-2 py-1">
-              Date: {today}
+              Date: {loanDetails.created_at}
             </div>
           </div>
         </CardHeader>
@@ -208,8 +211,8 @@ const Agreement = ({ onChange }: AgreementProps) => {
                 <p className="font-medium">{loanDetails.customer_address || "Customer Address"}</p>
               </div>
               <div className="flex flex-col gap-2">
-                <p className="text-sm text-muted-foreground">collatral file no</p>
-                <p className="font-medium">{loanDetails.customer_gender || "Gender"}</p>
+                <p className="text-sm text-muted-foreground">description</p>
+                <p className="font-medium">{loanDetails.purpose || "Gender"}</p>
               </div>
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-muted-foreground">Amount:</p>
@@ -247,10 +250,6 @@ const Agreement = ({ onChange }: AgreementProps) => {
                   </p>
                 </div>
               )}
-              <div>
-                <p className="text-sm text-muted-foreground">description</p>
-                <p className="font-medium">{loanDetails.term_months || "0"}</p>
-              </div>
             </div>
           </div>
 

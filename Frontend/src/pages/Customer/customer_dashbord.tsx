@@ -103,8 +103,8 @@ const Customer_dashbord = () => {
         </Button>
       </div>
       <div>
-        <h1 className="text-4xl font-bold text-center">Lender Dashbord</h1>
-        <h1 className="text-2xl text-center mt-4 text-gray-600">Welcome to the lender Dashboard</h1>
+        <h1 className="text-4xl font-bold text-center">Borrower Dashbord</h1>
+        <h1 className="text-2xl text-center mt-4 text-gray-600">Welcome to the Borrower Dashboard</h1>
         {loading && (
           <div className="flex justify-center items-center h-screen">
             <Loader2 className="animate-spin h-10 w-10 text-blue-500" />

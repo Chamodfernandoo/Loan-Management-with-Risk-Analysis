@@ -364,19 +364,13 @@ export default function CreateLoanPage() {
 
               <FormField control={form.control} name="description" render={({ field })=> (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Description/collatral info</FormLabel>
                   <FormControl><Textarea placeholder="Loan purpose" {...field}/></FormControl>
                   <FormMessage/>
                 </FormItem>
               )} />
 
-                <FormField control={form.control} name="collatral_file" render={({ field })=> (
-                <FormItem>
-                  <FormLabel>Collatral file number (if have)</FormLabel>
-                  <FormControl><Input placeholder="Enter Collatral file number" {...field}/></FormControl>
-                  <FormMessage/>
-                </FormItem>
-              )} />
+                
 
               <FormField control={form.control} name="installments" render={({ field })=> (
                 <FormItem>
