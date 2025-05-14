@@ -135,7 +135,7 @@ export default function CardsPage() {
     <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Button variant="outline" className="mr-4" onClick={handleReturn}>
+          <Button variant="outline" className="mr-4" onClick={() => navigate(-1)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
