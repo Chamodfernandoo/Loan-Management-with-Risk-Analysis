@@ -39,7 +39,9 @@ A modern loan management system built with React, TypeScript, and Tailwind CSS. 
 
 3.npm run dev  
 
-# uvicorn app.main:app --reload
 
+inside Backen folder
 activate virtual environment
-# venv\Scripts\activate
+### venv\Scripts\activate
+
+### uvicorn app.main:app --reload

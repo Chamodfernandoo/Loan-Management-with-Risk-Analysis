@@ -182,8 +182,9 @@ const RiskProfilePage: React.FC = () => {
         total_late_payments: parseInt(data.noOfLatePayments) || 0,
       };
 
+
       // Save the risk analysis data
-      const result = await riskService.analyzeRisk(riskData);
+      const result = await riskService.analyzeRisk(JSON.stringify(riskData));
       
       // Set the risk level from the response
       setRiskLevel(result.risk_level.toUpperCase());

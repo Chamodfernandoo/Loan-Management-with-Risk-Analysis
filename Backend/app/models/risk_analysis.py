@@ -33,7 +33,7 @@ class RiskAnalysisRequest(BaseModel):
 
 class RiskAnalysisResponse(BaseModel):
     borrower_id: str
-    risk_score: float
+    #risk_score: float
     risk_level: RiskLevel
     factors: List[RiskFactor]
     recommendations: List[str]

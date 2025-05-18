@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Dict
 from bson import ObjectId
@@ -109,6 +110,15 @@ async def analyze_borrower_risk(
     risk_data: RiskAnalysisRequest,
     current_user = Depends(get_current_active_user)
 ):
+    if not isinstance(risk_data, RiskAnalysisRequest):
+        try:
+            risk_data = RiskAnalysisRequest(**risk_data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid risk analysis data: {str(e)}"
+            )
+    #print("Risk data received:", risk_data)
     """Analyze the risk profile of a borrower"""
     if current_user["role"] != "lender":
         raise HTTPException(
@@ -134,17 +144,17 @@ async def analyze_borrower_risk(
         )
     
     # Set the correct borrower_id to the user's ID
-    risk_data.borrower_id = str(user["_id"])
-    
+   # risk_data.borrower_id = str(user["_id"])
+    print("Risk data after borrower ID update:", risk_data)
     try:
         # This is a placeholder for your actual risk model
         # In a real application, you would call your ML model here
-        risk_score, risk_level, factors, recommendations = perform_risk_analysis(risk_data)
-        
+        risk_level, factors, recommendations = perform_risk_analysis(risk_data)
+        print(risk_level,factors,recommendations)
         # Create response
         response = RiskAnalysisResponse(
             borrower_id=risk_data.borrower_id,
-            risk_score=risk_score,
+            #risk_score=risk_score,
             risk_level=risk_level,
             factors=factors,
             recommendations=recommendations,
@@ -165,52 +175,88 @@ async def analyze_borrower_risk(
             detail=f"Error analyzing risk: {str(e)}"
         )
 
+def ConvertIntoJson(data: str) -> str:
+    pairs = data.split()
+    
+    result = {}
+    for pair in pairs:
+        if "=" not in pair:
+            continue  # Skip invalid pairs
+        key, value = pair.split("=", 1)  # Split only on the first '='
+        
+        # Handle string values
+        if value.startswith("'") and value.endswith("'"):
+            result[key] = value.strip("'")
+        # Handle None values
+        elif value == "None":
+            result[key] = None
+        # Handle numeric values (float or int)
+        elif '.' in value:
+            try:
+                result[key] = float(value)
+            except ValueError:
+                result[key] = value
+        else:
+            try:
+                result[key] = int(value)
+            except ValueError:
+                result[key] = value
+
+    json_data = json.dumps(result, indent=2)
+    print("Converted JSON data:", json_data)
+    return json_data
+
 def perform_risk_analysis(data: RiskAnalysisRequest):
  """
  Placeholder for risk analysis model.
  This would be replaced with your actual model implementation.
  Uses 3 risk levels: low, medium, high
  """
+ #print("Risk analysis data")
+ #data = ConvertIntoJson(data)
+ #print("Data received for risk analysis:", data)
+ risk_level = predict_risk(data)
  # Simple logic to calculate risk score based on available data
+ print(risk_level)
  
- base_score = 50  # Start with medium risk
+#  base_score = 50  # Start with medium risk
 
-    # Adjust based on income
- if data.monthly_income:
-        if data.monthly_income > 100000:
-            base_score -= 20
-        elif data.monthly_income > 50000:
-            base_score -= 10
-        elif data.monthly_income < 20000:
-            base_score += 15
+#     # Adjust based on income
+#  if data.monthly_income:
+#         if data.monthly_income > 100000:
+#             base_score -= 20
+#         elif data.monthly_income > 50000:
+#             base_score -= 10
+#         elif data.monthly_income < 20000:
+#             base_score += 15
     
     # Adjust based on payment history
- if data.total_on_time_payments is not None and data.total_late_payments is not None:
-        total_payments = data.total_on_time_payments + data.total_late_payments
-        if total_payments > 0:
-            late_ratio = data.total_late_payments / total_payments
-            if late_ratio > 0.3:
-                base_score += 20
-            elif late_ratio < 0.1:
-                base_score -= 15
+#  if data.total_on_time_payments is not None and data.total_late_payments is not None:
+#         total_payments = data.total_on_time_payments + data.total_late_payments
+#         if total_payments > 0:
+#             late_ratio = data.total_late_payments / total_payments
+#             if late_ratio > 0.3:
+#                 base_score += 20
+#             elif late_ratio < 0.1:
+#                 base_score -= 15
     
-    # Adjust based on existing loans
- if data.no_of_available_loans and data.no_of_available_loans > 2:
-        base_score += 10
+#     # Adjust based on existing loans
+#  if data.no_of_available_loans and data.no_of_available_loans > 2:
+#         base_score += 10
     
-    # Add some randomization
- base_score += random.uniform(-5, 5)
+#     # Add some randomization
+#  base_score += random.uniform(-5, 5)
     
     # Ensure within bounds
- risk_score = max(min(base_score, 100), 0)
+#  risk_score = max(min(base_score, 100), 0)
     
     # Determine risk level - using 3 levels instead of 4
- if risk_score < 33:
-        risk_level = RiskLevel.LOW
- elif risk_score < 66:
-        risk_level = RiskLevel.MEDIUM
- else:
-        risk_level = RiskLevel.HIGH
+#  if risk_score < 33:
+#         risk_level = RiskLevel.LOW
+#  elif risk_score < 66:
+#         risk_level = RiskLevel.MEDIUM
+#  else:
+#         risk_level = RiskLevel.HIGH
     
     # Generate factors
  factors = [
@@ -261,4 +307,4 @@ def perform_risk_analysis(data: RiskAnalysisRequest):
             "Consider financial counseling for applicant"
         ]
     
- return risk_score, risk_level, factors, recommendations
+ return risk_level, factors, recommendations
