@@ -19,10 +19,11 @@ A modern loan management system built with React, TypeScript, and Tailwind CSS. 
 - Earn additional interest for late payments.  
 
 ## Tech Stack  
-- **Frontend**: React, TypeScript, Tailwind CSS  
-- **State Management**: React Context API or Redux (if used)  
-- **Backend**: (To be integrated or describe any backend used)  
-- **Tools**: QR Code API, PDF Generation Libraries  
+- **Frontend**: React, TypeScript, Tailwind CSS   
+- **Backend**: FastApi with python
+- **Database**: MongoDB
+- **AI Model**: XGBoost & random forest 
+- **Tools**: QR Code API, PDF Generation Libraries , Cloudinary
 
 ## Getting Started  
 
@@ -39,7 +40,9 @@ A modern loan management system built with React, TypeScript, and Tailwind CSS. 
 ### inside Frontend folder
 1. npm install 
 2. npm install axios  html5-qrcode
-3. npm run dev  
+
+run Frontend
+- npm run dev  
 
 
 ### inside Backend folder
@@ -49,4 +52,6 @@ activate virtual environment
 install dependancies
 - pip install fastapi uvicorn motor pydantic python-jose python-multipart passlib pymongo[srv] python-dotenv email-validator
 - pip install cloudinary
+
+run Backend
 - uvicorn app.main:app --reload
