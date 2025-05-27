@@ -35,13 +35,18 @@ A modern loan management system built with React, TypeScript, and Tailwind CSS. 
    ```bash  
    git clone https://github.com/Chamodfernandoo/Loan-Management-with-Risk-Analysis.git 
    cd Loan-Management-with-Risk-Analysis
-2.npm install  
 
-3.npm run dev  
+### inside Frontend folder
+1. npm install 
+2. npm install axios  html5-qrcode
+3. npm run dev  
 
 
-inside Backen folder
+### inside Backend folder
 activate virtual environment
-### venv\Scripts\activate
+- venv\Scripts\activate
 
-### uvicorn app.main:app --reload
+install dependancies
+- pip install fastapi uvicorn motor pydantic python-jose python-multipart passlib pymongo[srv] python-dotenv email-validator
+- pip install cloudinary
+- uvicorn app.main:app --reload

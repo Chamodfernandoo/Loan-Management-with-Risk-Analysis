@@ -263,7 +263,7 @@ const Lender_dashbord = () => {
           <p className="text-muted-foreground">Here's an overview of your lending business</p>
         </div>
 
-        {/* Stats section */}
+        {/* Stats section 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard 
             title="Active Loans" 
@@ -292,7 +292,7 @@ const Lender_dashbord = () => {
             trend={{ value: "5%", positive: false }}
             color="red"
           />
-        </div>
+        </div>*/}
 
         {/* Quick actions */}
         <div className="mb-8">
@@ -411,8 +411,8 @@ const Lender_dashbord = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-muted-foreground">© 2023 PayMe Loan Management. All rights reserved.</p>
             <div className="flex gap-4 mt-4 md:mt-0">
-              <Link to="/terms" className="text-sm text-muted-foreground hover:text-blue-600">Terms of Service</Link>
-              <Link to="/privacy" className="text-sm text-muted-foreground hover:text-blue-600">Privacy Policy</Link>
+              <Link to="" className="text-sm text-muted-foreground hover:text-blue-600">Terms of Service</Link>
+              <Link to="" className="text-sm text-muted-foreground hover:text-blue-600">Privacy Policy</Link>
               <Link to="/lender/support" className="text-sm text-muted-foreground hover:text-blue-600">Help Center</Link>
             </div>
           </div>
