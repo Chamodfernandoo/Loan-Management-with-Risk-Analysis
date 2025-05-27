@@ -32,7 +32,7 @@ A modern loan management system built with React, TypeScript, and Tailwind CSS. 
 - npm or yarn  
 
 ### Installation  
-1. Clone the repository:  
+1. Clone the repository:  main branch 
    ```bash  
    git clone https://github.com/Chamodfernandoo/Loan-Management-with-Risk-Analysis.git 
    cd Loan-Management-with-Risk-Analysis
